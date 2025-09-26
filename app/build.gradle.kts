@@ -54,4 +54,9 @@ dependencies {
 
     implementation("androidx.activity:activity:1.6.1")
     implementation("androidx.fragment:fragment-ktx:1.5.5")
+
+
+    implementation ("androidx.room:room-runtime:2.6.1")
+    annotationProcessor("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.arch.core:core-runtime:2.2.0")
 }

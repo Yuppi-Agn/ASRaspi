@@ -5,13 +5,17 @@ import com.AS.Yuppi.Raspi.DataWorkers.SchedulelController;
 import com.AS.Yuppi.Raspi.DataWorkers.Schedules;
 import com.AS.Yuppi.Raspi.R;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.HorizontalScrollView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -34,12 +38,21 @@ public class HomeFragment extends Fragment {
             TV_Time, TV_Times_1, TV_Times_2, TV_Schedules;
     private List<TextView> TextView_Weeks=new ArrayList<>();
     private TextView TV_Schedules_1;
-    private SchedulelController SchedulelController = MySingleton.getInstance().getSchedulelController();
+    private SchedulelController SchedulelController;// = MySingleton.getInstance().getSchedulelController();
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable runnable;
     //private Schedules controller_Schedules = new Schedules(1);
     private HorizontalScrollView HorizontalScrollView_Schedules;
     private String TimesToday="", TimesNextDay="";
+    private Button button_load_schedule;
+    private Spinner spinner_select_schedule;
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        SchedulelController = MySingleton.getInstance(context.getApplicationContext())
+                .getSchedulelController();
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -106,6 +119,23 @@ public class HomeFragment extends Fragment {
             }
         });
 
+        button_load_schedule=view.findViewById(R.id.button_load_schedule);
+        spinner_select_schedule=view.findViewById(R.id.spinner_select_schedule);
+
+        button_load_schedule.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LoadSchedule();
+            }
+        });
+        button_load_schedule.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                LoadDBContbext();
+                return true;
+            }
+        });
+
         runnable = new Runnable() {
             @Override
             public void run() {
@@ -118,14 +148,20 @@ public class HomeFragment extends Fragment {
         handler.postDelayed(runnable, getMillisUntilNextMinute());
 
         UpdateData();
-        /*
-        myButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Handle button click
-            }
-        });
-         */
+    }
+    private void LoadDBContbext(){
+        List<String> Data =SchedulelController.fillSchedulesListFromDB();
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_spinner_item,
+                Data
+        );
+        adapter.setDropDownViewResource(android.R.layout.select_dialog_item);
+        spinner_select_schedule.setAdapter(adapter);
+    }
+    private void LoadSchedule(){
+        SchedulelController.loadCurrentSchedule(spinner_select_schedule.getSelectedItem().toString());
+        UpdateData();
     }
     private void UpdateData(){
         Schedules CurrentSchedule = SchedulelController.getCurrentSchedule();
@@ -158,6 +194,7 @@ public class HomeFragment extends Fragment {
 
         ShowTimesData(true, true);
         ShowHideWeeksData(true);
+        LoadDBContbext();
     }
     private void ShowHideWeeksData(boolean IsUpdateOnly){
         Schedules CurrentSchedule = SchedulelController.getCurrentSchedule();
@@ -185,12 +222,18 @@ public class HomeFragment extends Fragment {
 
         if(IsNeedClear || Objects.equals(TimesToday, "") || Objects.equals(TimesNextDay, "")){
             int Day =getCurrentDayOfWeek(), NextDay;
-            if(!(CurrentSchedule.getFirstWeekId() == CurrentWeekEven())) Day+=7;
+            if(!(CurrentSchedule.getFirstWeekId() == CurrentWeekEven()) && CurrentSchedule.getCircle_Mode()==1) Day+=7;
             NextDay=Day+1;
             if(Day>14)
                 Day=13;
             if(NextDay>14)
                 NextDay=0;
+
+            if(CurrentSchedule.getCircle_Mode()==1 &&Day>7)
+                Day=6;
+            if(CurrentSchedule.getCircle_Mode()==1 &&NextDay>7)
+                NextDay=0;
+
 
             TimesToday=SetTimesData(Day);
             TimesNextDay=SetTimesData(NextDay);
@@ -234,9 +277,12 @@ public class HomeFragment extends Fragment {
 
         String Data="";
         int Day =getCurrentDayOfWeek();
-        if(!(CurrentSchedule.getFirstWeekId() == CurrentWeekEven())) Day+=7;
+        if(!(CurrentSchedule.getFirstWeekId() == CurrentWeekEven()) && CurrentSchedule.getCircle_Mode()==1) Day+=7;
         if(Day>14)
             Day=13;
+        if(CurrentSchedule.getCircle_Mode()==1 &&Day>7)
+            Day=6;
+
         int CurTime=getMinutesSinceMidnight(),
         TimeToCheck=CurrentSchedule.getLessons_StartTime(Day, 0);
         if(CurTime>TimeToCheck){
@@ -274,9 +320,9 @@ public class HomeFragment extends Fragment {
                                                                         if(CurTime>TimeToCheck){
                                                                             TimeToCheck=CurrentSchedule.getLessons_EndTime(Day, 8);
                                                                             if(CurTime>TimeToCheck){
-                                                                                TimeToCheck=CurrentSchedule.getLessons_StartTime(Day, 1);
+                                                                                TimeToCheck=CurrentSchedule.getLessons_StartTime(Day, 9);
                                                                                 if(CurTime>TimeToCheck){
-                                                                                    TimeToCheck=CurrentSchedule.getLessons_EndTime(Day, 1);
+                                                                                    TimeToCheck=CurrentSchedule.getLessons_EndTime(Day, 9);
                                                                                     if(CurTime>TimeToCheck){
                                                                                         Data="На сегодня занятия окончились";
                                                                                     }

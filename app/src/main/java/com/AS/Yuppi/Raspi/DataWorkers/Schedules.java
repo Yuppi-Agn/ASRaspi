@@ -60,8 +60,8 @@ public class Schedules {
     public Map<LocalDate, Day_Schedule> getSpecial_Days_Shedule() {
         return Special_Days_Shedule;
     }
-    public void setSpecial_Days_Shedule(LocalDate Date, Day_Schedule Data) {
-        this.Special_Days_Shedule.put(Date, Data);
+    public void setSpecial_Days_Shedule(Map<LocalDate, Day_Schedule> special_Days_Shedule) {
+        this.Special_Days_Shedule = special_Days_Shedule;
     }
     public int getCircle_Mode() {
         return Circle_Mode;
@@ -124,5 +124,10 @@ public class Schedules {
     public void setAuthor(String author) {
         this.Author = author;
     }
-
+    public List<Day_Schedule> getDays_Schedule() {
+        return Days_Schedule;
+    }
+    public void setDays_Schedule(List<Day_Schedule> days_Schedule) {
+        Days_Schedule = days_Schedule;
+    }
 }

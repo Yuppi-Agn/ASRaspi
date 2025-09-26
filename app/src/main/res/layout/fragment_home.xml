@@ -21,6 +21,34 @@
             tools:layout_editor_absoluteX="1dp"
             tools:layout_editor_absoluteY="21dp">
 
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <LinearLayout
+                    android:layout_width="409dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    tools:layout_editor_absoluteX="1dp"
+                    tools:layout_editor_absoluteY="1dp">
+
+                    <Spinner
+                        android:id="@+id/spinner_select_schedule"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="10sp"
+                        />
+
+                    <Button
+                        android:id="@+id/button_load_schedule"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Загрузить расписание\nОбновить список"
+                        android:textSize="10sp"
+                        />
+                </LinearLayout>
+            </HorizontalScrollView>
+
             <LinearLayout
                 android:layout_width="409dp"
                 android:layout_height="wrap_content"
@@ -35,7 +63,7 @@
                     android:layout_weight="1"
                     android:clickable="true"
                     android:text="Расписание на сегодня"
-                    android:textColor="#000000" />
+                     />
 
                 <TextView
                     android:id="@+id/TV_NextDay"
@@ -43,7 +71,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Расписание на завтра"
-                    android:textColor="#000000" />
+                     />
             </LinearLayout>
 
             <TextView
@@ -51,7 +79,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="На сегодня занятий... нет?"
-                android:textColor="#000000" />
+                 />
 
             <HorizontalScrollView
                 android:layout_width="match_parent"
@@ -67,14 +95,13 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Расписание занятий?"
-                        android:textColor="#000000" />
+                         />
 
                     <TextView
                         android:id="@+id/TV_Times_2"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Ух, не завтра"
-                        android:textColor="#000000"
                         android:visibility="gone"/>
                 </LinearLayout>
             </HorizontalScrollView>
@@ -84,7 +111,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="~Показать на неделю~"
-                android:textColor="#000000" />
+                 />
 
             <HorizontalScrollView
                 android:id="@+id/HorizontalScrollView_Schedules"
@@ -108,7 +135,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Сегодня первая неделя"
-                            android:textColor="#000000" />
+                             />
                     </LinearLayout>
                     <LinearLayout
                         android:layout_width="wrap_content"
@@ -119,43 +146,43 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Понедельник"
-                            android:textColor="#000000" />
+                             />
                         <TextView
                             android:id="@+id/TV_Schedules_2_2"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Вторник"
-                            android:textColor="#000000" />
+                             />
                         <TextView
                             android:id="@+id/TV_Schedules_2_3"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Среда"
-                            android:textColor="#000000" />
+                             />
                         <TextView
                             android:id="@+id/TV_Schedules_2_4"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Четверг"
-                            android:textColor="#000000" />
+                             />
                         <TextView
                             android:id="@+id/TV_Schedules_2_5"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Пятница"
-                            android:textColor="#000000" />
+                             />
                         <TextView
                             android:id="@+id/TV_Schedules_2_6"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Суббота"
-                            android:textColor="#000000" />
+                             />
                         <TextView
                             android:id="@+id/TV_Schedules_2_7"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Воскресенье"
-                            android:textColor="#000000" />
+                             />
                     </LinearLayout>
                     <LinearLayout
                         android:layout_width="wrap_content"
@@ -167,43 +194,44 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Понедельник"
-                            android:textColor="#000000" />
+                             />
                         <TextView
                             android:id="@+id/TV_Schedules_3_2"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Вторник"
-                            android:textColor="#000000" />
+                             />
                         <TextView
                             android:id="@+id/TV_Schedules_3_3"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Среда"
-                            android:textColor="#000000" />
+                             />
                         <TextView
                             android:id="@+id/TV_Schedules_3_4"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Четверг"
-                            android:textColor="#000000" />
+                             />
                         <TextView
                             android:id="@+id/TV_Schedules_3_5"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Пятница"
-                            android:textColor="#000000" />
+                             />
                         <TextView
                             android:id="@+id/TV_Schedules_3_6"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Суббота"
-                            android:textColor="#000000" />
+                            />
                         <TextView
                             android:id="@+id/TV_Schedules_3_7"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Воскресенье"
-                            android:textColor="#000000" />                    </LinearLayout>
+                            />
+                    </LinearLayout>
 
                 </LinearLayout>
             </HorizontalScrollView>

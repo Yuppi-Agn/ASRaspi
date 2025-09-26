@@ -2,6 +2,7 @@ package com.AS.Yuppi.Raspi.ui.schedule_redactor;
 
 import android.app.Activity;
 import android.content.ClipData;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -10,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -23,6 +25,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.AS.Yuppi.Raspi.DataWorkers.DeviceUtils;
 import com.AS.Yuppi.Raspi.DataWorkers.FileUtil;
 import com.AS.Yuppi.Raspi.DataWorkers.MySingleton;
 import com.AS.Yuppi.Raspi.DataWorkers.SchedulelController;
@@ -31,6 +34,8 @@ import com.AS.Yuppi.Raspi.R;
 import com.AS.Yuppi.Raspi.databinding.FragmentScheduleRedactorBinding;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,8 +47,14 @@ public class ScheduleRedactorFragment extends Fragment {
 
     private FragmentScheduleRedactorBinding binding;
     private ActivityResultLauncher<Intent> filePickerLauncher;
-    private SchedulelController SchedulelController= MySingleton.getInstance().getSchedulelController();
+    private SchedulelController SchedulelController;//= MySingleton.getInstance().getSchedulelController();
     private int WeekOnScreen = 0;
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        SchedulelController = MySingleton.getInstance(context.getApplicationContext())
+                .getSchedulelController();
+    }
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -94,9 +105,11 @@ public class ScheduleRedactorFragment extends Fragment {
     private List<EditText> ListTimesStart= new ArrayList<>();
     private List<EditText> ListTimesEnd= new ArrayList<>();
     private EditText EditText_StartTime, EditText_EndTime;
+    private AutoCompleteTextView autoCompleteTextView_author;
     private TextView TextView_timelist;
     private Button button_fileload_filechecker, button_changeweek, button_firstweekchange, button_save_load,
             button_time_saveday,button_time_clear;
+    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -202,6 +215,7 @@ public class ScheduleRedactorFragment extends Fragment {
         button_changeweek=view.findViewById(R.id.button_changeweek);
         button_firstweekchange=view.findViewById(R.id.button_firstweekchange);
         button_save_load=view.findViewById(R.id.button_save_load);
+        autoCompleteTextView_author=view.findViewById(R.id.autoCompleteTextView_author);
 
         button_fileload_filechecker=view.findViewById(R.id.button_fileload_filechecker);
         button_fileload_filechecker.setOnClickListener(new View.OnClickListener() {
@@ -255,6 +269,19 @@ public class ScheduleRedactorFragment extends Fragment {
         button_save_load.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Schedules CurrentSchedule = SchedulelController.geteditableSchedule();
+                if(CurrentSchedule==null) return;
+
+                CurrentSchedule.setName(autoCompleteTextView_author.getText().toString());
+                CurrentSchedule.setAuthor(MySingleton.getHashedDeviceId());
+
+                LocalDate StartDate, EndDate;
+                StartDate= getLocalDateFromString(EditText_StartTime.getText().toString());
+                EndDate= getLocalDateFromString(EditText_EndTime.getText().toString());
+
+                CurrentSchedule.setStart_Date(StartDate);
+                CurrentSchedule.setEnd_Date(EndDate);
+
                 SchedulelController.saveEditableSchedule();
             }
         });
@@ -284,6 +311,15 @@ public class ScheduleRedactorFragment extends Fragment {
             }
         });
          */
+    }
+    private LocalDate getLocalDateFromString(String Date){
+        LocalDate localDate=null;
+        try {
+            localDate = LocalDate.parse(Date, formatter);
+        } catch (java.time.format.DateTimeParseException e) {
+            System.err.println("Ошибка при парсинге даты: " + e.getMessage());
+        }
+        return localDate;
     }
     private void ChangeFirstWeekID(){
         Schedules CurrentSchedule = SchedulelController.geteditableSchedule();

@@ -1,8 +1,11 @@
 package com.AS.Yuppi.Raspi.DataWorkers;
 
+import androidx.room.Entity;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
 public class Day_Schedule {
 
     //private List<String> Lessons  = new ArrayList<>();
