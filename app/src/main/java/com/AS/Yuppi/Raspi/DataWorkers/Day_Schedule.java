@@ -35,6 +35,10 @@ public class Day_Schedule {
     }
     public void set_Lesson_EndTime(int index, int EndTime) { Lessons_EndTime.set(index, EndTime); }
     public void set_Lessons_EndTime(List<Integer> Data) { Lessons_EndTime = Data; }
+    public List<Integer> get_Lessons_StartTime() { return Lessons_StartTime; }
+    public List<Integer> get_Lessons_EndTime() {
+        return Lessons_EndTime;
+    }
     public int countLessons_StartTime(){
         return Lessons_StartTime.size();
     }

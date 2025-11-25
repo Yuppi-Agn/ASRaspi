@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Файл: app/src/main/res/drawable/button_background_circle.xml -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?android:attr/colorControlHighlight"> <!-- Цвет эффекта при нажатии -->
+
+    <!-- 1. Маска: ограничивает эффект нажатия формой круга -->
+    <item android:id="@android:id/mask">
+        <shape android:shape="oval">
+            <solid android:color="@android:color/darker_gray" /> <!-- Цвет не важен, важна форма -->
+        </shape>
+    </item>
+
+    <!-- 2. Фон: то, что видно в обычном состоянии. Тоже круг. -->
+    <item>
+        <shape android:shape="oval">
+            <!-- Цвет фона кнопки. Можно использовать белый или прозрачный,
+                 если вы хотите, чтобы кнопка была "невидимой" до нажатия -->
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+
+</ripple>
+    

@@ -6,8 +6,13 @@ import com.AS.Yuppi.Raspi.DataWorkers.BD.ScheduleNameAuthor;
 import com.AS.Yuppi.Raspi.DataWorkers.BD.ScheduleRepository;
 import com.AS.Yuppi.Raspi.DataWorkers.BD.SchedulesEntity;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 public class SchedulelController{
     private List<String> SchedulesList= new ArrayList<String>();
@@ -27,6 +32,10 @@ public class SchedulelController{
     public Schedules createeditableSchedule(){
         editableSchedule=new Schedules();
         editableSchedule.setAuthor(MySingleton.getHashedDeviceId());
+        return editableSchedule;
+    }
+    public Schedules seteditableSchedule(Schedules Data){
+        editableSchedule=Data;
         return editableSchedule;
     }
     public void saveEditableSchedule(){
@@ -93,6 +102,7 @@ public class SchedulelController{
         if (entity != null) {
             // 3. Преобразовать Entity в POJO Schedules с вложенными классами
             CurrentSchedule = ScheduleMapper.toPojo(entity);
+            repository.saveLastActiveScheduleName(authorNameString);
             notifyAction("CurrentScheduleLoaded");
         }
     }
@@ -112,7 +122,23 @@ public class SchedulelController{
 
         notifyAction("ScheduleSaved");
     }
+    public Schedules loadLastUsedScheduleOnStartup() {
+        // 1. Читаем сохраненную строку "Author-Name"
+        String lastScheduleName = repository.getLastActiveScheduleNameSync();
 
+        if (lastScheduleName == null || lastScheduleName.isEmpty()) {
+            // Ничего не сохранено в БД (первый запуск).
+            CurrentSchedule = null;
+            return null; // Возвращаем null, как вы и просили
+        }
+
+        // 2. Используем существующую функцию для загрузки полного объекта
+        // loadCurrentSchedule сам обновит CurrentSchedule, если найдет расписание.
+        loadCurrentSchedule(lastScheduleName);
+
+        // 3. Возвращаем текущее расписание (которое могло быть обновлено)
+        return CurrentSchedule;
+    }
     public Schedules getCurrentSchedule(){
         return CurrentSchedule;
     }
@@ -136,5 +162,46 @@ public class SchedulelController{
         for (OnActionListener listener : listeners) {
             listener.onAction(data);
         }
+    }
+
+    public boolean importScheduleFromJson(Context context, String fileName) {
+        File file = new File(context.getFilesDir(), fileName);
+        if (!file.exists()) {
+            System.err.println("Ошибка импорта: Файл " + fileName + " не найден.");
+            return false;
+        }
+
+        StringBuilder jsonContent = new StringBuilder();
+        BufferedReader reader = null;
+        try {
+            // 1. Читаем контент файла
+            reader = new BufferedReader(new InputStreamReader(context.openFileInput(fileName)));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                jsonContent.append(line);
+            }
+
+            // 2. Используем конвертер для создания объекта Schedules
+            Schedules importedSchedule = JsonConverter.fromJson(jsonContent.toString());
+
+            if (importedSchedule != null) {
+                // 3. Устанавливаем импортированное расписание как текущее
+                CurrentSchedule = importedSchedule;
+                notifyAction("CurrentScheduleLoaded");
+                System.out.println("Расписание успешно импортировано из: " + fileName);
+                return true;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Ошибка при чтении файла JSON: " + e.getMessage());
+        } finally {
+            try {
+                if (reader != null) reader.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
     }
 }

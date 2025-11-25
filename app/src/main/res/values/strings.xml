@@ -7,10 +7,11 @@
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
 
-    <string name="menu_home">Home</string>
+    <string name="menu_home">Главная</string>
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>
-    <string name="menu_ScheduleRedactor">Редактировать расписание</string>
+    <string name="menu_ScheduleRedactor">Редактор расписаний и мероприятий</string>
+    <string name="menu_HometaskRedactor">Задания и задачи</string>
 
     <string-array name="spinner_pageselect_items">
         <item>Редактор расписания</item>
@@ -30,5 +31,7 @@
         <item>Суббота</item>
         <item>Воскресенье</item>
     </string-array>
+    <string name="change_week_template">Поменять неделю\n%1$d неделя</string>
+    <string name="first_week_is_even_template">1 неделя %1$s</string>
 
 </resources>

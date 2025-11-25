@@ -14,12 +14,50 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/nav_view"
-        android:layout_width="wrap_content"
+<!--    <com.google.android.material.navigation.NavigationView-->
+<!--        android:id="@+id/nav_view"-->
+<!--        android:layout_width="280dp"-->
+<!--        android:layout_height="match_parent"-->
+<!--        android:layout_gravity="start"-->
+<!--        android:fitsSystemWindows="true"-->
+<!--        app:menu="@menu/activity_main_drawer"-->
+<!--        style="@style/Widget.App.NavigationView"-->
+<!--        />-->
+    <ScrollView
+        android:id="@+id/custom_nav_view"
+        android:layout_width="280dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
-        app:headerLayout="@layout/nav_header_main"
-        app:menu="@menu/activity_main_drawer" />
+        android:background="?android:attr/colorBackground">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp">
+
+            <!-- Пункт 1: Главная -->
+            <include
+                android:id="@+id/nav_home"
+                layout="@layout/custom_nav_item" />
+
+            <!-- Пункт 2: Редактор расписаний -->
+            <include
+                android:id="@+id/nav_schedule_redactor"
+                layout="@layout/custom_nav_item" />
+
+            <!-- Пункт 3: Старый редактор -->
+            <include
+                android:id="@+id/nav_schedule_redactor2"
+                layout="@layout/custom_nav_item" />
+
+            <!-- Пункт 4: Задания и задачи -->
+            <include
+                android:id="@+id/nav_hometaskRedactor"
+                layout="@layout/custom_nav_item" />
+
+        </LinearLayout>
+    </ScrollView>
 </androidx.drawerlayout.widget.DrawerLayout>

@@ -6,236 +6,238 @@
     android:layout_height="match_parent"
     tools:context=".ui.home.HomeFragment">
 
+    <!-- Нижняя панель, привязанная к низу экрана -->
+    <LinearLayout
+        android:id="@+id/bottom_panel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:background="@android:color/white"
+        android:elevation="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- Содержимое нижней панели с кнопками -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="4"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:gravity="center_vertical">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_add_hometask"
+                android:layout_width="0dp"
+                android:layout_height="76dp"
+                android:layout_weight="1"
+                style="@style/Widget.Material3.Button.TextButton.Icon"
+                android:text="Добавить задание"
+                android:textColor="@color/black"
+                app:icon="@drawable/ic_notification_add_24"
+                app:iconTint="@color/black"
+                app:iconGravity="textTop"
+                android:breakStrategy="simple"
+                android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                android:layout_marginHorizontal="4dp"
+                tools:ignore="HardcodedText"/>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_add_lecture_note"
+                android:layout_width="0dp"
+                android:layout_height="76dp"
+                android:layout_weight="1"
+                style="@style/Widget.Material3.Button.TextButton.Icon"
+                android:text="Добавить запись"
+                android:textColor="@color/black"
+                app:icon="@drawable/ic_keyboard_24"
+                app:iconTint="@color/black"
+                app:iconGravity="textTop"
+                android:breakStrategy="simple"
+                android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                android:layout_marginHorizontal="4dp"
+                tools:ignore="HardcodedText"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:layout_width="0dp"
+                android:layout_height="76dp"
+                android:layout_weight="1"
+                style="@style/Widget.Material3.Button.TextButton.Icon"
+                android:text="Добавить мероприятие"
+                android:textColor="@color/black"
+                app:icon="@drawable/ic_schedule_24"
+                app:iconTint="@color/black"
+                app:iconGravity="textTop"
+                android:breakStrategy="simple"
+                android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                android:layout_marginHorizontal="4dp"
+                tools:ignore="HardcodedText"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:layout_width="0dp"
+                android:layout_height="76dp"
+                android:layout_weight="1"
+                style="@style/Widget.Material3.Button.TextButton.Icon"
+                android:text="Показать на неделю"
+                android:textColor="@android:color/white"
+                android:backgroundTint="@color/black"
+                app:icon="@drawable/ic_calendar_month_24"
+                app:iconTint="@android:color/white"
+                app:iconGravity="textTop"
+                android:breakStrategy="simple"
+                android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                android:layout_marginHorizontal="4dp"
+                tools:ignore="HardcodedText" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- ScrollView для основного контента, занимает все место НАД нижней панелью -->
     <ScrollView
-        android:layout_width="409dp"
-        android:layout_height="729dp"
-        tools:layout_editor_absoluteX="1dp"
-        tools:layout_editor_absoluteY="1dp"
-        tools:ignore="MissingConstraints">
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottom_panel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
-            android:layout_width="409dp"
-            android:layout_height="709dp"
-            android:orientation="vertical"
-            tools:layout_editor_absoluteX="1dp"
-            tools:layout_editor_absoluteY="21dp">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <HorizontalScrollView
+            <!-- Блок выбора даты -->
+            <LinearLayout
+                android:id="@+id/date_picker_section"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:paddingTop="16dp">
 
                 <LinearLayout
-                    android:layout_width="409dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:background="@drawable/rounded_shadow_background"
+                    android:elevation="4dp"
                     android:orientation="horizontal"
-                    tools:layout_editor_absoluteX="1dp"
-                    tools:layout_editor_absoluteY="1dp">
+                    android:gravity="center_vertical">
 
-                    <Spinner
-                        android:id="@+id/spinner_select_schedule"
+                    <ImageButton
+                        android:id="@+id/btn_prev_day"
+                        android:layout_width="48dp"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/ic_arrow_back_24"
+                        android:background="@color/white"
+                        android:contentDescription="Предыдущий день"
+                        app:tint="@color/black"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp"/>
+
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="10sp"
-                        />
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal">
 
-                    <Button
-                        android:id="@+id/button_load_schedule"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Загрузить расписание\nОбновить список"
-                        android:textSize="10sp"
-                        />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Выберите дату"
+                            android:textSize="14sp"
+                            android:textColor="@android:color/darker_gray"/>
+
+                        <TextView
+                            android:id="@+id/tv_current_date"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="09.09.2025"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/black"/>
+                    </LinearLayout>
+
+                    <ImageButton
+                        android:id="@+id/btn_next_day"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_arrow_forward_24"
+                        android:background="@color/white"
+                        android:contentDescription="Следующий день"
+                        app:tint="@color/black"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp"/>
                 </LinearLayout>
-            </HorizontalScrollView>
-
-            <LinearLayout
-                android:layout_width="409dp"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                tools:layout_editor_absoluteX="1dp"
-                tools:layout_editor_absoluteY="1dp">
 
                 <TextView
-                    android:id="@+id/TV_CurDay"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:clickable="true"
-                    android:text="Расписание на сегодня"
-                     />
-
-                <TextView
-                    android:id="@+id/TV_NextDay"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Расписание на завтра"
-                     />
+                    android:text="Перелистните для выбора дня"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/darker_gray"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="16dp"/>
             </LinearLayout>
 
+            <!-- Заголовок "Сегодня" -->
             <TextView
-                android:id="@+id/TV_Time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="На сегодня занятий... нет?"
-                 />
-
-            <HorizontalScrollView
+                android:id="@+id/tv_today_header"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/TV_Times_1"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Расписание занятий?"
-                         />
-
-                    <TextView
-                        android:id="@+id/TV_Times_2"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Ух, не завтра"
-                        android:visibility="gone"/>
-                </LinearLayout>
-            </HorizontalScrollView>
-
-            <TextView
-                android:id="@+id/TV_Schedules"
-                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="~Показать на неделю~"
-                 />
+                android:text="Сегодня:"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_marginTop="8dp"/>
 
-            <HorizontalScrollView
-                android:id="@+id/HorizontalScrollView_Schedules"
+            <!-- Список расписания -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/schedule_list"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:visibility="gone"
-                >
+                android:layout_height="wrap_content"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:clipToPadding="false"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/item_schedule"
+                tools:itemCount="3"/>
 
-                <LinearLayout
+            <!-- Блок "Следующее занятие" -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView
                     android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical">
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="horizontal"
-                        android:gravity="center">
+                    android:layout_height="wrap_content"
+                    android:text="Следующее занятие"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"/>
 
-                        <TextView
-                            android:id="@+id/TV_Schedules_1"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Сегодня первая неделя"
-                             />
-                    </LinearLayout>
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:orientation="horizontal">
-                        <TextView
-                            android:id="@+id/TV_Schedules_2_1"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Понедельник"
-                             />
-                        <TextView
-                            android:id="@+id/TV_Schedules_2_2"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Вторник"
-                             />
-                        <TextView
-                            android:id="@+id/TV_Schedules_2_3"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Среда"
-                             />
-                        <TextView
-                            android:id="@+id/TV_Schedules_2_4"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Четверг"
-                             />
-                        <TextView
-                            android:id="@+id/TV_Schedules_2_5"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Пятница"
-                             />
-                        <TextView
-                            android:id="@+id/TV_Schedules_2_6"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Суббота"
-                             />
-                        <TextView
-                            android:id="@+id/TV_Schedules_2_7"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Воскресенье"
-                             />
-                    </LinearLayout>
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:id="@+id/TV_Schedules_3_1"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Понедельник"
-                             />
-                        <TextView
-                            android:id="@+id/TV_Schedules_3_2"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Вторник"
-                             />
-                        <TextView
-                            android:id="@+id/TV_Schedules_3_3"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Среда"
-                             />
-                        <TextView
-                            android:id="@+id/TV_Schedules_3_4"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Четверг"
-                             />
-                        <TextView
-                            android:id="@+id/TV_Schedules_3_5"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Пятница"
-                             />
-                        <TextView
-                            android:id="@+id/TV_Schedules_3_6"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Суббота"
-                            />
-                        <TextView
-                            android:id="@+id/TV_Schedules_3_7"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Воскресенье"
-                            />
-                    </LinearLayout>
-
-                </LinearLayout>
-            </HorizontalScrollView>
+                <TextView
+                    android:id="@+id/tv_next_class_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="До конца занятия осталось 45 минут."
+                    android:textSize="14sp"/>
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

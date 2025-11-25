@@ -59,4 +59,11 @@ dependencies {
     implementation ("androidx.room:room-runtime:2.6.1")
     annotationProcessor("androidx.room:room-compiler:2.6.1")
     implementation("androidx.arch.core:core-runtime:2.2.0")
+
+    // Retrofit для сетевых запросов
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    // Gson Converter для автоматической конвертации JSON в объекты и обратно
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    // OkHttp Logging Interceptor для отладки запросов (очень полезно!)
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
 }

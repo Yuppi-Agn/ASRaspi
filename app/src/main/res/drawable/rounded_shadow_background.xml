@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Файл: app/src/main/res/drawable/rounded_shadow_background.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- Задаем цвет фона. Используйте белый или любой другой непрозрачный цвет. -->
+    <solid android:color="@android:color/white" />
+
+    <!-- Задаем радиус скругления углов. Подберите значение, которое вам нравится. -->
+    <corners android:radius="16dp" />
+
+</shape>

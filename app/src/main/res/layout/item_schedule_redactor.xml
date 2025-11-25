@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="12dp"
+    android:background="@drawable/item_background_border"
+    android:layout_marginBottom="12dp">
+
+    <!-- Основной контент (название и детали) -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="16dp">
+
+        <TextView
+            android:id="@+id/tv_item_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            android:textStyle="bold"
+            tools:text="ИГЭУ ИВТФ 1-42х" />
+
+        <TextView
+            android:id="@+id/tv_item_details"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="@android:color/darker_gray"
+            android:layout_marginTop="2dp"
+            android:visibility="gone"
+            tools:visibility="visible"
+            tools:text="С 9 сентября 13:40-15:00, каждые 3 дня" />
+
+    </LinearLayout>
+
+    <!-- Иконки управления -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginEnd="8dp">
+
+        <!-- Иконка выбора/статуса (для расписаний) -->
+        <ImageView
+            android:id="@+id/iv_selection_indicator"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:src="@drawable/radio_button_unchecked_24"
+            android:contentDescription="Выбрать как текущее"
+            android:visibility="visible"
+            tools:src="@drawable/radio_button_checked_24"/>
+
+        <!-- Кнопка редактирования -->
+        <ImageButton
+            android:id="@+id/btn_edit_item"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/edit_24"
+            app:tint="#FFC107"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Редактировать"/>
+
+        <!-- Кнопка удаления -->
+        <ImageButton
+            android:id="@+id/btn_delete_item"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/close_24"
+            app:tint="@android:color/holo_red_dark"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Удалить"/>
+    </LinearLayout>
+
+</LinearLayout>

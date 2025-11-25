@@ -16,11 +16,28 @@ public class ScheduleRepository {
             Executors.newFixedThreadPool(NUMBER_OF_THREADS);
     private static final ExecutorService databaseReadExecutor =
             Executors.newSingleThreadExecutor();
+    private LastActiveScheduleDao lastActiveScheduleDao;
 
     public ScheduleRepository(Application application) {
         AppDatabase db = AppDatabase.getDatabase(application);
         schedulesDao = db.schedulesDao();
         allSchedules = schedulesDao.getAllSchedules();
+        lastActiveScheduleDao = db.lastActiveScheduleDao();
+    }
+    public void saveLastActiveScheduleName(final String authorName) {
+        databaseWriteExecutor.execute(() -> {
+            LastActiveScheduleEntity entity = new LastActiveScheduleEntity(authorName);
+            lastActiveScheduleDao.insertOrUpdate(entity);
+        });
+    }
+    public String getLastActiveScheduleNameSync() {
+        try {
+            // Использование .get() для блокировки и получения синхронного результата
+            return databaseWriteExecutor.submit(() -> lastActiveScheduleDao.getLastActiveScheduleAuthorNameSync()).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public LiveData<List<SchedulesEntity>> getAllSchedules() {
