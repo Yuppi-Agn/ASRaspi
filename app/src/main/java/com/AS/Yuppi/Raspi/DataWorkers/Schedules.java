@@ -2,12 +2,20 @@ package com.AS.Yuppi.Raspi.DataWorkers;import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Schedules {
     private List<Day_Schedule> Days_Schedule= new ArrayList<>();
     private Map<LocalDate, Day_Schedule> Special_Days_Shedule= new HashMap<>();
+    // Array of hometasks related to this schedule
+    private List<Hometask> Hometasks = new ArrayList<>();
+    // Array of notes related to this schedule
+    private List<Note> Notes = new ArrayList<>();
     private int Circle_Mode=0;//0=7, 1=14
     private int FirstWeekId=0;//Четная или нечетная первая неделя
     private LocalDate Start_Date=LocalDate.of(2025, 9, 11);
@@ -22,6 +30,38 @@ public class Schedules {
 
     public Schedules(int Circle_Mode){
         setCircle_Mode(Circle_Mode);
+    }
+
+    // ---------------- Hometask helpers ----------------
+
+    public Hometask addHometask(String lesson, String task, LocalDate endpoint) {
+        Hometask hometask = new Hometask(lesson, task, endpoint);
+        Hometasks.add(hometask);
+        return hometask;
+    }
+
+    public List<Hometask> getHometasks() {
+        return Hometasks;
+    }
+
+    public void setHometasks(List<Hometask> hometasks) {
+        this.Hometasks = hometasks;
+    }
+
+    // ---------------- Notes helpers ----------------
+
+    public Note addNote(String lesson, String data) {
+        Note note = new Note(lesson, data);
+        Notes.add(note);
+        return note;
+    }
+
+    public List<Note> getNotes() {
+        return Notes;
+    }
+
+    public void setNotes(List<Note> notes) {
+        this.Notes = notes;
     }
     public Day_Schedule getScheduleForDayOffset(int offset) {
         LocalDate targetDate = LocalDate.now().plusDays(offset);
@@ -193,5 +233,240 @@ public class Schedules {
     }
     public void setDays_Schedule(List<Day_Schedule> days_Schedule) {
         Days_Schedule = days_Schedule;
+    }
+
+    /**
+     * Извлекает список уникальных предметов из всех Day_Schedule.
+     * Парсит строку занятий аналогично HomeFragment.parseDaySchedule.
+     */
+    public List<String> getSubjectsList() {
+        Set<String> subjectsSet = new HashSet<>();
+        
+        // Парсим все дни расписания
+        for (Day_Schedule daySchedule : Days_Schedule) {
+            String lessonsRaw = daySchedule.get_lesson();
+            if (lessonsRaw == null || lessonsRaw.trim().isEmpty()) {
+                continue;
+            }
+            
+            // Разбиваем на блоки занятий (формат "цифра)")
+            String[] lessonBlocks = lessonsRaw.split("\\s*(?=\\d+\\))");
+            
+            for (String block : lessonBlocks) {
+                String trimmedBlock = block.trim();
+                if (trimmedBlock.isEmpty()) continue;
+                
+                try {
+                    int parenIndex = trimmedBlock.indexOf(')');
+                    if (parenIndex < 0) continue;
+                    
+                    // Извлекаем название предмета
+                    String tempSubject = trimmedBlock.substring(parenIndex + 1).trim();
+                    
+                    // Ищем преподавателя (Ф.И.О. или Ф. И.)
+                    Pattern teacherPattern = Pattern.compile("([А-ЯЁ][а-яё]+(?:\\s[А-ЯЁ]\\.){1,2})");
+                    Matcher teacherMatcher = teacherPattern.matcher(tempSubject);
+                    String teacherName = "";
+                    if (teacherMatcher.find()) {
+                        teacherName = teacherMatcher.group(1);
+                    }
+                    
+                    // Ищем аудиторию (буква и 3 цифры)
+                    Pattern classroomPattern = Pattern.compile("([А-Я]\\d{3})");
+                    Matcher classroomMatcher = classroomPattern.matcher(tempSubject);
+                    String classroom = "";
+                    if (classroomMatcher.find()) {
+                        classroom = classroomMatcher.group(1).trim();
+                    }
+                    
+                    // Определяем тип и очищаем название предмета
+                    String subjectName = "";
+                    if (tempSubject.contains("лек.")) {
+                        subjectName = tempSubject.split("лек.")[0].trim();
+                    } else if (tempSubject.contains("лаб.")) {
+                        subjectName = tempSubject.split("лаб.")[0].trim();
+                    } else if (tempSubject.contains("сем.")) {
+                        subjectName = tempSubject.split("сем.")[0].trim();
+                    } else {
+                        // Если тип не указан, берем все до преподавателя или аудитории
+                        int endOfSubject = tempSubject.length();
+                        if (!teacherName.isEmpty()) {
+                            int idx = tempSubject.indexOf(teacherName);
+                            if (idx >= 0) endOfSubject = Math.min(endOfSubject, idx);
+                        }
+                        if (!classroom.isEmpty()) {
+                            int idx = tempSubject.indexOf(classroom);
+                            if (idx >= 0) endOfSubject = Math.min(endOfSubject, idx);
+                        }
+                        subjectName = tempSubject.substring(0, endOfSubject).trim();
+                    }
+                    
+                    // Убираем лишние переносы строк и добавляем в множество
+                    subjectName = subjectName.replace("\n", " ").trim();
+                    if (!subjectName.isEmpty()) {
+                        subjectsSet.add(subjectName);
+                    }
+                } catch (Exception e) {
+                    // Игнорируем ошибки парсинга отдельного блока
+                }
+            }
+        }
+        
+        // Также парсим специальные дни
+        for (Day_Schedule daySchedule : Special_Days_Shedule.values()) {
+            String lessonsRaw = daySchedule.get_lesson();
+            if (lessonsRaw == null || lessonsRaw.trim().isEmpty()) {
+                continue;
+            }
+            
+            String[] lessonBlocks = lessonsRaw.split("\\s*(?=\\d+\\))");
+            for (String block : lessonBlocks) {
+                String trimmedBlock = block.trim();
+                if (trimmedBlock.isEmpty()) continue;
+                
+                try {
+                    int parenIndex = trimmedBlock.indexOf(')');
+                    if (parenIndex < 0) continue;
+                    
+                    String tempSubject = trimmedBlock.substring(parenIndex + 1).trim();
+                    Pattern teacherPattern = Pattern.compile("([А-ЯЁ][а-яё]+(?:\\s[А-ЯЁ]\\.){1,2})");
+                    Matcher teacherMatcher = teacherPattern.matcher(tempSubject);
+                    String teacherName = "";
+                    if (teacherMatcher.find()) {
+                        teacherName = teacherMatcher.group(1);
+                    }
+                    
+                    Pattern classroomPattern = Pattern.compile("([А-Я]\\d{3})");
+                    Matcher classroomMatcher = classroomPattern.matcher(tempSubject);
+                    String classroom = "";
+                    if (classroomMatcher.find()) {
+                        classroom = classroomMatcher.group(1).trim();
+                    }
+                    
+                    String subjectName = "";
+                    if (tempSubject.contains("лек.")) {
+                        subjectName = tempSubject.split("лек.")[0].trim();
+                    } else if (tempSubject.contains("лаб.")) {
+                        subjectName = tempSubject.split("лаб.")[0].trim();
+                    } else if (tempSubject.contains("сем.")) {
+                        subjectName = tempSubject.split("сем.")[0].trim();
+                    } else {
+                        int endOfSubject = tempSubject.length();
+                        if (!teacherName.isEmpty()) {
+                            int idx = tempSubject.indexOf(teacherName);
+                            if (idx >= 0) endOfSubject = Math.min(endOfSubject, idx);
+                        }
+                        if (!classroom.isEmpty()) {
+                            int idx = tempSubject.indexOf(classroom);
+                            if (idx >= 0) endOfSubject = Math.min(endOfSubject, idx);
+                        }
+                        subjectName = tempSubject.substring(0, endOfSubject).trim();
+                    }
+                    
+                    subjectName = subjectName.replace("\n", " ").trim();
+                    if (!subjectName.isEmpty()) {
+                        subjectsSet.add(subjectName);
+                    }
+                } catch (Exception e) {
+                    // Игнорируем ошибки парсинга
+                }
+            }
+        }
+        
+        // Возвращаем отсортированный список
+        List<String> result = new ArrayList<>(subjectsSet);
+        result.sort(String::compareTo);
+        return result;
+    }
+
+    // ---------------- Inner classes ----------------
+
+    public static class Hometask {
+        private String Lesson;
+        private String Task;
+        private LocalDate Endpoint;
+        private boolean IsDone = false;
+        private boolean IsPersonal = false;
+
+        public Hometask(String lesson, String task, LocalDate endpoint) {
+            this.Lesson = lesson;
+            this.Task = task;
+            this.Endpoint = endpoint;
+        }
+
+        public String getLesson() {
+            return Lesson;
+        }
+
+        public void setLesson(String lesson) {
+            Lesson = lesson;
+        }
+
+        public String getTask() {
+            return Task;
+        }
+
+        public void setTask(String task) {
+            Task = task;
+        }
+
+        public LocalDate getEndpoint() {
+            return Endpoint;
+        }
+
+        public void setEndpoint(LocalDate endpoint) {
+            Endpoint = endpoint;
+        }
+
+        public boolean isDone() {
+            return IsDone;
+        }
+
+        public void setDone(boolean done) {
+            IsDone = done;
+        }
+
+        public boolean isPersonal() {
+            return IsPersonal;
+        }
+
+        public void setPersonal(boolean personal) {
+            IsPersonal = personal;
+        }
+    }
+
+    public static class Note {
+        private String Lesson;
+        private String Data;
+        private boolean IsPersonal = false;
+
+        public Note(String lesson, String data) {
+            this.Lesson = lesson;
+            this.Data = data;
+        }
+
+        public String getLesson() {
+            return Lesson;
+        }
+
+        public void setLesson(String lesson) {
+            Lesson = lesson;
+        }
+
+        public String getData() {
+            return Data;
+        }
+
+        public void setData(String data) {
+            Data = data;
+        }
+
+        public boolean isPersonal() {
+            return IsPersonal;
+        }
+
+        public void setPersonal(boolean personal) {
+            IsPersonal = personal;
+        }
     }
 }

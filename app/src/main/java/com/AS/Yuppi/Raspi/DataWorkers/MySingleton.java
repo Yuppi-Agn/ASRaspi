@@ -9,6 +9,7 @@ public class MySingleton {
     private static MySingleton instance;
     private SchedulelController schedulelController;
     private ScheduleRepository scheduleRepository;
+    private UserController userController;
     private static String HashedDeviceId="";
     private MySingleton() {
         //schedulelController = new SchedulelController();
@@ -36,6 +37,12 @@ public class MySingleton {
 
             // 3. Создание SchedulelController с передачей репозитория
             instance.schedulelController = new SchedulelController(instance.scheduleRepository);
+
+            // 4. При старте приложения пытаемся загрузить последнее активное расписание
+            instance.schedulelController.loadLastUsedScheduleOnStartup();
+
+            // 5. Создаем UserController для пользовательских событий/задач
+            instance.userController = new UserController(instance.scheduleRepository);
         }
         return instance;
     }
@@ -53,6 +60,13 @@ public class MySingleton {
             throw new IllegalStateException("MySingleton не был инициализирован. Вызовите getInstance(Context) первым.");
         }
         return scheduleRepository;
+    }
+
+    public UserController getUserController() {
+        if (userController == null) {
+            throw new IllegalStateException("MySingleton не был инициализирован. Вызовите getInstance(Context) первым.");
+        }
+        return userController;
     }
 
     public static String getHashedDeviceId(){

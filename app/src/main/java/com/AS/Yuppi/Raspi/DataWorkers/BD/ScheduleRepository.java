@@ -3,6 +3,7 @@ package com.AS.Yuppi.Raspi.DataWorkers.BD;
 import android.app.Application;
 import androidx.lifecycle.LiveData;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -17,12 +18,16 @@ public class ScheduleRepository {
     private static final ExecutorService databaseReadExecutor =
             Executors.newSingleThreadExecutor();
     private LastActiveScheduleDao lastActiveScheduleDao;
+    private UserEventsDao userEventsDao;
+    private UserTasksDao userTasksDao;
 
     public ScheduleRepository(Application application) {
         AppDatabase db = AppDatabase.getDatabase(application);
         schedulesDao = db.schedulesDao();
         allSchedules = schedulesDao.getAllSchedules();
         lastActiveScheduleDao = db.lastActiveScheduleDao();
+        userEventsDao = db.userEventsDao();
+        userTasksDao = db.userTasksDao();
     }
     public void saveLastActiveScheduleName(final String authorName) {
         databaseWriteExecutor.execute(() -> {
@@ -48,6 +53,14 @@ public class ScheduleRepository {
     public void insert(final SchedulesEntity schedule) {
         databaseWriteExecutor.execute(() -> {
             schedulesDao.insert(schedule);
+        });
+    }
+
+    // Удаление расписания
+    public void delete(final SchedulesEntity schedule) {
+        if (schedule == null) return;
+        databaseWriteExecutor.execute(() -> {
+            schedulesDao.delete(schedule);
         });
     }
 
@@ -87,5 +100,95 @@ public class ScheduleRepository {
             e.printStackTrace();
             return null;
         }
+    }
+
+    // ---- Работа с пользовательскими событиями и задачами ----
+
+    public void insertUserEvent(final UserEventEntity event) {
+        databaseWriteExecutor.execute(() -> userEventsDao.insert(event));
+    }
+
+    public List<UserEventEntity> getAllUserEventsSync() {
+        try {
+            return databaseReadExecutor.submit(userEventsDao::getAllEvents).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    public UserEventEntity getUserEventByIdSync(int id) {
+        try {
+            return databaseReadExecutor.submit(() -> userEventsDao.getById(id)).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public void setUserEventEnabled(final int id, final boolean enabled) {
+        databaseWriteExecutor.execute(() -> userEventsDao.setEnabled(id, enabled));
+    }
+
+    public void deleteUserEventById(final int id) {
+        databaseWriteExecutor.execute(() -> {
+            UserEventEntity entity = userEventsDao.getById(id);
+            if (entity != null) {
+                userEventsDao.delete(entity);
+            }
+        });
+    }
+
+    public void insertUserTask(final UserTaskEntity task) {
+        databaseWriteExecutor.execute(() -> userTasksDao.insert(task));
+    }
+
+    public List<UserEventEntity> getEventsForDateSync(LocalDate date) {
+        try {
+            return databaseReadExecutor.submit(() -> userEventsDao.getEventsForDate(date)).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    public List<UserTaskEntity> getTasksFromDateSync(LocalDate fromDate) {
+        try {
+            return databaseReadExecutor.submit(() -> userTasksDao.getTasksFromDate(fromDate)).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    public List<UserTaskEntity> getAllUserTasksSync() {
+        try {
+            return databaseReadExecutor.submit(userTasksDao::getAllTasks).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    public UserTaskEntity getUserTaskByIdSync(int id) {
+        try {
+            return databaseReadExecutor.submit(() -> userTasksDao.getById(id)).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public void setUserTaskDone(final int id, final boolean done) {
+        databaseWriteExecutor.execute(() -> userTasksDao.setDone(id, done));
+    }
+
+    public void deleteUserTaskById(final int id) {
+        databaseWriteExecutor.execute(() -> {
+            UserTaskEntity entity = userTasksDao.getById(id);
+            if (entity != null) {
+                userTasksDao.delete(entity);
+            }
+        });
     }
 }

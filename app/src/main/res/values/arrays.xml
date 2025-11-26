@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Режимы повторения пользовательских событий -->
+    <string-array name="spinner_event_circlemode_items">
+        <item>Один раз</item>          <!-- 0 -->
+        <item>Еженедельно</item>      <!-- 1 -->
+        <item>Раз в две недели</item> <!-- 2 -->
+        <item>Каждые N дней</item>    <!-- 3 -->
+    </string-array>
+
+</resources>
+
+

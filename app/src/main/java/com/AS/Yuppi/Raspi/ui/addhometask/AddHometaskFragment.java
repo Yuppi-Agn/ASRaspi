@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,11 +15,20 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.AS.Yuppi.Raspi.DataWorkers.MySingleton;
+import com.AS.Yuppi.Raspi.DataWorkers.SchedulelController;
+import com.AS.Yuppi.Raspi.DataWorkers.Schedules;
+import com.AS.Yuppi.Raspi.DataWorkers.UserController;
+import com.AS.Yuppi.Raspi.DataWorkers.UserTask;
 import com.AS.Yuppi.Raspi.R;
 import com.AS.Yuppi.Raspi.databinding.FragmentAddHometaskBinding;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 
 public class AddHometaskFragment extends Fragment {
@@ -26,6 +36,11 @@ public class AddHometaskFragment extends Fragment {
     private AddHometaskViewModel addHometaskViewModel;
     private FragmentAddHometaskBinding binding;
     private final Calendar myCalendar = Calendar.getInstance();
+
+    private SchedulelController schedulelController;
+    private UserController userController;
+    private String mode = "study"; // "study" или "personal"
+    private int taskId = -1; // для study: индекс, для personal: id в БД
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -39,34 +54,87 @@ public class AddHometaskFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        MySingleton singleton = MySingleton.getInstance(requireContext().getApplicationContext());
+        schedulelController = singleton.getSchedulelController();
+        userController = singleton.getUserController();
+
+        if (getArguments() != null) {
+            mode = getArguments().getString("mode", "study");
+            taskId = getArguments().getInt("taskId", -1);
+        }
+
         setupSubjectSpinner();
         setupDatePicker();
+        setupLayoutForMode();
+        
+        // Обновляем подсказку в зависимости от режима
+        if ("personal".equals(mode)) {
+            binding.etTaskDescription.setHint("Введите описание задания...");
+        } else {
+            binding.etTaskDescription.setHint("Введите описание задания...");
+        }
+        
+        // Если не редактируем, устанавливаем сегодняшнюю дату по умолчанию
+        if (taskId < 0) {
+            if ("personal".equals(mode)) {
+                if (binding.etDatePersonal.getText().toString().trim().isEmpty()) {
+                    updateLabelPersonal();
+                }
+            } else {
+                if (binding.etDate.getText().toString().trim().isEmpty()) {
+                    updateLabel();
+                }
+            }
+        }
+        
+        prefillIfEditing();
 
         // Обработчик для плавающей кнопки "Сохранить"
-        binding.fabSaveTask.setOnClickListener(v -> {
-            // TODO: Добавить логику сохранения задания (в базу данных или ViewModel)
-            // String subject = binding.spinnerSubject.getSelectedItem().toString();
-            // String date = binding.etDate.getText().toString();
-            // String description = binding.etTaskDescription.getText().toString();
-
-            // После сохранения возвращаемся на предыдущий экран
-            NavHostFragment.findNavController(this).navigateUp();
-        });
+        binding.fabSaveTask.setOnClickListener(v -> saveTask());
     }
+    private void setupLayoutForMode() {
+        if ("personal".equals(mode)) {
+            // Для личных задач: показываем контейнер с названием и датой, скрываем спиннер предметов
+            binding.personalTaskContainer.setVisibility(View.VISIBLE);
+            binding.topControlsContainer.setVisibility(View.GONE);
+            binding.etTaskDescription.setHint("Введите описание задания...");
+        } else {
+            // Для учебных задач: показываем спиннер предметов, скрываем контейнер для личных задач
+            binding.personalTaskContainer.setVisibility(View.GONE);
+            binding.topControlsContainer.setVisibility(View.VISIBLE);
+            binding.etTaskDescription.setHint("Введите описание задания...");
+        }
+    }
+
     private void setupSubjectSpinner() {
-        // TODO: Загрузите реальный список предметов из вашей базы данных или ресурсов
-        String[] subjects = {"Дискретная математика", "Программирование", "Физика", "История"};
-
+        if ("personal".equals(mode)) {
+            // Для личных задач спиннер не нужен
+            return;
+        }
+        
+        // Для учебных задач загружаем реальные предметы из расписания
+        Schedules current = schedulelController.getCurrentSchedule();
+        List<String> subjectsList = new ArrayList<>();
+        
+        if (current != null) {
+            subjectsList = current.getSubjectsList();
+        }
+        
+        // Если список пуст, добавляем заглушку
+        if (subjectsList.isEmpty()) {
+            subjectsList.add("Выберите предмет");
+        }
+        
         // Создаем адаптер для Spinner
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, subjects);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, subjectsList);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
+        
         // Применяем адаптер к Spinner
         binding.spinnerSubject.setAdapter(adapter);
     }
 
     private void setupDatePicker() {
-        // Создаем слушателя для выбора даты
+        // Создаем слушателя для выбора даты (для учебных задач)
         DatePickerDialog.OnDateSetListener dateSetListener = (view, year, month, dayOfMonth) -> {
             myCalendar.set(Calendar.YEAR, year);
             myCalendar.set(Calendar.MONTH, month);
@@ -74,9 +142,25 @@ public class AddHometaskFragment extends Fragment {
             updateLabel();
         };
 
-        // Устанавливаем обработчик клика на поле ввода даты
+        // Создаем слушателя для выбора даты (для личных задач)
+        DatePickerDialog.OnDateSetListener dateSetListenerPersonal = (view, year, month, dayOfMonth) -> {
+            myCalendar.set(Calendar.YEAR, year);
+            myCalendar.set(Calendar.MONTH, month);
+            myCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+            updateLabelPersonal();
+        };
+
+        // Устанавливаем обработчик клика на поле ввода даты (учебные задачи)
         binding.etDate.setOnClickListener(v -> {
             new DatePickerDialog(requireContext(), dateSetListener,
+                    myCalendar.get(Calendar.YEAR),
+                    myCalendar.get(Calendar.MONTH),
+                    myCalendar.get(Calendar.DAY_OF_MONTH)).show();
+        });
+
+        // Устанавливаем обработчик клика на поле ввода даты (личные задачи)
+        binding.etDatePersonal.setOnClickListener(v -> {
+            new DatePickerDialog(requireContext(), dateSetListenerPersonal,
                     myCalendar.get(Calendar.YEAR),
                     myCalendar.get(Calendar.MONTH),
                     myCalendar.get(Calendar.DAY_OF_MONTH)).show();
@@ -85,9 +169,143 @@ public class AddHometaskFragment extends Fragment {
 
     private void updateLabel() {
         // Форматируем дату в нужный вид и устанавливаем в поле ввода
-        String myFormat = "dd/MM/yyyy"; // Формат даты
+        String myFormat = "dd.MM.yyyy"; // Формат даты
         SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.getDefault());
         binding.etDate.setText(sdf.format(myCalendar.getTime()));
+    }
+
+    private void updateLabelPersonal() {
+        // Форматируем дату в нужный вид и устанавливаем в поле ввода для личных задач
+        String myFormat = "dd.MM.yyyy"; // Формат даты
+        SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.getDefault());
+        binding.etDatePersonal.setText(sdf.format(myCalendar.getTime()));
+    }
+
+    private void prefillIfEditing() {
+        if (taskId < 0) return;
+
+        if ("study".equals(mode)) {
+            Schedules current = schedulelController.getCurrentSchedule();
+            if (current == null) return;
+            if (taskId < 0 || taskId >= current.getHometasks().size()) return;
+            Schedules.Hometask ht = current.getHometasks().get(taskId);
+
+            // Предмет
+            String lesson = ht.getLesson();
+            if (binding.spinnerSubject.getVisibility() == View.VISIBLE) {
+                ArrayAdapter adapter = (ArrayAdapter) binding.spinnerSubject.getAdapter();
+                if (adapter != null) {
+                    int pos = adapter.getPosition(lesson);
+                    if (pos >= 0) binding.spinnerSubject.setSelection(pos);
+                }
+            }
+
+            // Дата
+            if (ht.getEndpoint() != null) {
+                LocalDate d = ht.getEndpoint();
+                DateTimeFormatter df = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+                binding.etDate.setText(d.format(df));
+                // Обновляем календарь для date picker
+                myCalendar.set(d.getYear(), d.getMonthValue() - 1, d.getDayOfMonth());
+            }
+
+            // Описание
+            binding.etTaskDescription.setText(ht.getTask());
+
+        } else {
+            UserTask t = userController.getTaskById(taskId);
+            if (t == null) return;
+
+            // Для личных задач: используем отдельные поля для названия и описания
+            binding.etTaskName.setText(t.getName());
+            binding.etTaskDescription.setText(t.getTask() != null ? t.getTask() : "");
+
+            if (t.getEndpoint() != null) {
+                LocalDate d = t.getEndpoint();
+                DateTimeFormatter df = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+                binding.etDatePersonal.setText(d.format(df));
+                myCalendar.set(d.getYear(), d.getMonthValue() - 1, d.getDayOfMonth());
+            }
+        }
+    }
+
+    private void saveTask() {
+        String dateStr;
+        if ("personal".equals(mode)) {
+            dateStr = binding.etDatePersonal.getText().toString().trim();
+        } else {
+            dateStr = binding.etDate.getText().toString().trim();
+        }
+        String description = binding.etTaskDescription.getText().toString().trim();
+
+        LocalDate endpoint = null;
+        if (!dateStr.isEmpty()) {
+            try {
+                DateTimeFormatter df = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+                endpoint = LocalDate.parse(dateStr, df);
+            } catch (Exception e) {
+                Toast.makeText(requireContext(), "Неверный формат даты. Используйте дд.мм.гггг", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+
+        if ("study".equals(mode)) {
+            // Учебное задание
+            String subject = "";
+            if (binding.spinnerSubject.getVisibility() == View.VISIBLE && binding.spinnerSubject.getSelectedItem() != null) {
+                subject = binding.spinnerSubject.getSelectedItem().toString();
+            }
+            
+            if (subject.isEmpty() || "Выберите предмет".equals(subject)) {
+                Toast.makeText(requireContext(), "Выберите предмет", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            if (description.trim().isEmpty()) {
+                Toast.makeText(requireContext(), "Введите описание задания", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Schedules current = schedulelController.getCurrentSchedule();
+            if (current == null) {
+                Toast.makeText(requireContext(), "Расписание не загружено", Toast.LENGTH_SHORT).show();
+                NavHostFragment.findNavController(this).navigateUp();
+                return;
+            }
+            
+            if (taskId >= 0 && taskId < current.getHometasks().size()) {
+                // Редактирование существующего
+                Schedules.Hometask ht = current.getHometasks().get(taskId);
+                ht.setLesson(subject);
+                ht.setTask(description);
+                ht.setEndpoint(endpoint);
+            } else {
+                // Добавление нового
+                Schedules.Hometask ht = current.addHometask(subject, description, endpoint);
+                ht.setPersonal(false);
+            }
+            
+            schedulelController.seteditableSchedule(current);
+            schedulelController.saveEditableSchedule();
+            Toast.makeText(requireContext(), "Задание сохранено", Toast.LENGTH_SHORT).show();
+        } else {
+            // Личное задание
+            String name = binding.etTaskName.getText().toString().trim();
+            
+            if (name.isEmpty()) {
+                Toast.makeText(requireContext(), "Введите название задания", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            UserTask t = new UserTask(endpoint, name, description);
+            if (taskId > 0) {
+                t.setId(taskId);
+            }
+            userController.saveOrUpdateTask(t);
+            Toast.makeText(requireContext(), "Задание сохранено", Toast.LENGTH_SHORT).show();
+        }
+
+        NavHostFragment.findNavController(this).navigateUp();
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.AS.Yuppi.Raspi.ui.schedule_redactor2;
 
 import android.app.Activity;
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.media.MediaScannerConnection;
@@ -13,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -35,11 +37,14 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -64,6 +69,9 @@ public class ScheduleRedactor2Fragment extends Fragment {
     private List<EditText> listDaysViews;
     private List<EditText> listTimesStartViews;
     private List<EditText> listTimesEndViews;
+    
+    private final Calendar calendarStartDate = Calendar.getInstance();
+    private final Calendar calendarEndDate = Calendar.getInstance();
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -104,6 +112,7 @@ public class ScheduleRedactor2Fragment extends Fragment {
         setupPageSelectSpinner();
         setupCircleModeSpinner();
         setupTimeDaySelectSpinner();
+        setupDatePickers();
         setupClickListeners();
 
         // Загружаем данные в поля при первом создании View
@@ -167,6 +176,52 @@ public class ScheduleRedactor2Fragment extends Fragment {
         });
     }
 
+    private void setupDatePickers() {
+        // Слушатель для даты начала
+        DatePickerDialog.OnDateSetListener dateStartListener = (view, year, month, dayOfMonth) -> {
+            calendarStartDate.set(Calendar.YEAR, year);
+            calendarStartDate.set(Calendar.MONTH, month);
+            calendarStartDate.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+            updateDateStartLabel();
+        };
+
+        // Слушатель для даты окончания
+        DatePickerDialog.OnDateSetListener dateEndListener = (view, year, month, dayOfMonth) -> {
+            calendarEndDate.set(Calendar.YEAR, year);
+            calendarEndDate.set(Calendar.MONTH, month);
+            calendarEndDate.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+            updateDateEndLabel();
+        };
+
+        // Устанавливаем обработчик клика на поле даты начала
+        binding.editTextDateStartdate.setOnClickListener(v -> {
+            new DatePickerDialog(requireContext(), dateStartListener,
+                    calendarStartDate.get(Calendar.YEAR),
+                    calendarStartDate.get(Calendar.MONTH),
+                    calendarStartDate.get(Calendar.DAY_OF_MONTH)).show();
+        });
+
+        // Устанавливаем обработчик клика на поле даты окончания
+        binding.editTextDateEnddate.setOnClickListener(v -> {
+            new DatePickerDialog(requireContext(), dateEndListener,
+                    calendarEndDate.get(Calendar.YEAR),
+                    calendarEndDate.get(Calendar.MONTH),
+                    calendarEndDate.get(Calendar.DAY_OF_MONTH)).show();
+        });
+    }
+
+    private void updateDateStartLabel() {
+        String myFormat = "dd.MM.yyyy";
+        SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.getDefault());
+        binding.editTextDateStartdate.setText(sdf.format(calendarStartDate.getTime()));
+    }
+
+    private void updateDateEndLabel() {
+        String myFormat = "dd.MM.yyyy";
+        SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.getDefault());
+        binding.editTextDateEnddate.setText(sdf.format(calendarEndDate.getTime()));
+    }
+
     private void setupClickListeners() {
         binding.buttonFileloadFilechecker.setOnClickListener(v -> launchFilePicker(false, "*/*"));
         binding.buttonFileloadFilechecker.setOnLongClickListener(v -> {
@@ -187,6 +242,13 @@ public class ScheduleRedactor2Fragment extends Fragment {
         binding.buttonFirstweekchange.setOnClickListener(v -> changeFirstWeekID());
         binding.buttonSaveLoad.setOnClickListener(v -> {
             updateEditableInfo();
+            Schedules schedule = schedulelController.geteditableSchedule();
+            if (schedule == null || schedule.getName() == null || schedule.getName().trim().isEmpty()) {
+                Toast.makeText(getContext(), "Введите имя расписания", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            // Автор всегда берется из MySingleton/DeviceUtils
+            schedule.setAuthor(MySingleton.getHashedDeviceId());
             schedulelController.saveEditableSchedule();
             Toast.makeText(getContext(), "Расписание сохранено локально", Toast.LENGTH_SHORT).show();
         });
@@ -252,10 +314,26 @@ public class ScheduleRedactor2Fragment extends Fragment {
         binding.autoCompleteTextViewAuthor.setText(currentSchedule.getName());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         if(currentSchedule.getStart_Date() != null) {
-            binding.editTextDateStartdate.setText(currentSchedule.getStart_Date().format(formatter));
+            LocalDate startDate = currentSchedule.getStart_Date();
+            binding.editTextDateStartdate.setText(startDate.format(formatter));
+            // Обновляем календарь для date picker
+            calendarStartDate.set(startDate.getYear(), startDate.getMonthValue() - 1, startDate.getDayOfMonth());
+        } else {
+            // Устанавливаем текущую дату по умолчанию, если поле пустое
+            if (binding.editTextDateStartdate.getText().toString().trim().isEmpty()) {
+                updateDateStartLabel();
+            }
         }
         if(currentSchedule.getEnd_Date() != null) {
-            binding.editTextDateEnddate.setText(currentSchedule.getEnd_Date().format(formatter));
+            LocalDate endDate = currentSchedule.getEnd_Date();
+            binding.editTextDateEnddate.setText(endDate.format(formatter));
+            // Обновляем календарь для date picker
+            calendarEndDate.set(endDate.getYear(), endDate.getMonthValue() - 1, endDate.getDayOfMonth());
+        } else {
+            // Устанавливаем текущую дату по умолчанию, если поле пустое
+            if (binding.editTextDateEnddate.getText().toString().trim().isEmpty()) {
+                updateDateEndLabel();
+            }
         }
 
         // Обновляем список времени

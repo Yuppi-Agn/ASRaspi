@@ -75,7 +75,7 @@ public class AddLectureFragment extends Fragment {
     }
 
     private void updateLabel() {
-        String myFormat = "dd/MM/yyyy";
+        String myFormat = "dd.MM.yyyy";
         SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.getDefault());
         binding.etDate.setText(sdf.format(myCalendar.getTime()));
     }

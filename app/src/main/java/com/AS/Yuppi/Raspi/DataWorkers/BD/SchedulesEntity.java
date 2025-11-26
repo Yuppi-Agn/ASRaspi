@@ -4,6 +4,7 @@ import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
 import com.AS.Yuppi.Raspi.DataWorkers.Day_Schedule;
+import com.AS.Yuppi.Raspi.DataWorkers.Schedules;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -36,12 +37,18 @@ public class SchedulesEntity {
     private String Name;
     private String Author;
 
+    // Новые поля: списки домашних заданий и заметок
+    private List<Schedules.Hometask> Hometasks;
+    private List<Schedules.Note> Notes;
+
     // Конструктор для Room (должен соответствовать полям)
     public SchedulesEntity(List<Day_Schedule> Days_Schedule,
                            Map<LocalDate, Day_Schedule> Special_Days_Shedule,
                            int Circle_Mode, int FirstWeekId,
                            LocalDate Start_Date, LocalDate End_Date,
-                           List<LocalDate> Hollidays, String Name, String Author) {
+                           List<LocalDate> Hollidays, String Name, String Author,
+                           List<Schedules.Hometask> Hometasks,
+                           List<Schedules.Note> Notes) {
         this.Days_Schedule = Days_Schedule;
         this.Special_Days_Shedule = Special_Days_Shedule;
         this.Circle_Mode = Circle_Mode;
@@ -51,6 +58,8 @@ public class SchedulesEntity {
         this.Hollidays = Hollidays;
         this.Name = Name;
         this.Author = Author;
+        this.Hometasks = Hometasks;
+        this.Notes = Notes;
     }
 
     // Геттеры и Сеттеры (обязательны для Room!)
@@ -84,4 +93,10 @@ public class SchedulesEntity {
 
     public String getAuthor() { return Author; }
     public void setAuthor(String author) { Author = author; }
+
+    public List<Schedules.Hometask> getHometasks() { return Hometasks; }
+    public void setHometasks(List<Schedules.Hometask> hometasks) { Hometasks = hometasks; }
+
+    public List<Schedules.Note> getNotes() { return Notes; }
+    public void setNotes(List<Schedules.Note> notes) { Notes = notes; }
 }

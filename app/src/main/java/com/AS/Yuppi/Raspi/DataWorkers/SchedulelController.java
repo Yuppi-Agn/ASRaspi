@@ -122,6 +122,28 @@ public class SchedulelController{
 
         notifyAction("ScheduleSaved");
     }
+
+    /**
+     * Удаляет расписание по строке формата \"Author-Name\".
+     */
+    public void deleteSchedule(String authorNameString) {
+        if (authorNameString == null || authorNameString.isEmpty()) return;
+
+        String[] parts = authorNameString.split("-", 2);
+        if (parts.length < 2) return;
+        String scheduleName = parts[1].trim();
+
+        SchedulesEntity entity = repository.getScheduleByNameSync(scheduleName);
+        if (entity != null) {
+            repository.delete(entity);
+
+            // Если удалили текущее расписание — очищаем ссылку
+            if (CurrentSchedule != null && scheduleName.equals(CurrentSchedule.getName())) {
+                CurrentSchedule = null;
+            }
+            notifyAction("ScheduleDeleted");
+        }
+    }
     public Schedules loadLastUsedScheduleOnStartup() {
         // 1. Читаем сохраненную строку "Author-Name"
         String lastScheduleName = repository.getLastActiveScheduleNameSync();

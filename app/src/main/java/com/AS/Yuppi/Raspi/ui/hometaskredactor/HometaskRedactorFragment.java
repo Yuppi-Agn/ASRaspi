@@ -15,7 +15,13 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.navigation.fragment.NavHostFragment;
 
+import com.AS.Yuppi.Raspi.DataWorkers.MySingleton;
+import com.AS.Yuppi.Raspi.DataWorkers.SchedulelController;
+import com.AS.Yuppi.Raspi.DataWorkers.Schedules;
+import com.AS.Yuppi.Raspi.DataWorkers.UserController;
+import com.AS.Yuppi.Raspi.DataWorkers.UserTask;
 import com.AS.Yuppi.Raspi.R;
 import com.AS.Yuppi.Raspi.databinding.FragmentHometaskRedactorBinding;
 
@@ -24,12 +30,18 @@ import java.util.List;
 
 // --- Модель данных для одной задачи ---
 class HometaskItem {
+    enum TaskType { STUDY, PERSONAL }
+
+    TaskType type;
+    int indexOrId; // для учебных - индекс в списке Hometasks, для личных - id в БД
     String title;
     String dueDate;
     String description;
     boolean isCompleted;
 
-    public HometaskItem(String title, String dueDate, String description, boolean isCompleted) {
+    public HometaskItem(TaskType type, int indexOrId, String title, String dueDate, String description, boolean isCompleted) {
+        this.type = type;
+        this.indexOrId = indexOrId;
         this.title = title;
         this.dueDate = dueDate;
         this.description = description;
@@ -43,9 +55,21 @@ class HometaskAdapter extends RecyclerView.Adapter<HometaskAdapter.HometaskViewH
     private List<HometaskItem> items;
     private Context context;
 
+    interface OnHometaskActionListener {
+        void onToggleComplete(HometaskItem item);
+        void onEdit(HometaskItem item);
+        void onDelete(HometaskItem item);
+    }
+
+    private OnHometaskActionListener actionListener;
+
     public HometaskAdapter(List<HometaskItem> items, Context context) {
         this.items = items;
         this.context = context;
+    }
+
+    public void setOnHometaskActionListener(OnHometaskActionListener listener) {
+        this.actionListener = listener;
     }
 
     public void updateData(List<HometaskItem> newItems) {
@@ -83,18 +107,21 @@ class HometaskAdapter extends RecyclerView.Adapter<HometaskAdapter.HometaskViewH
 
         // Обработчик для смены состояния
         holder.btnTaskComplete.setOnClickListener(v -> {
-            currentItem.isCompleted = !currentItem.isCompleted;
-            notifyItemChanged(position);
-            String status = currentItem.isCompleted ? "Выполнено" : "Не выполнено";
-            Toast.makeText(v.getContext(), status + ": " + currentItem.title, Toast.LENGTH_SHORT).show();
+            if (actionListener != null) {
+                actionListener.onToggleComplete(currentItem);
+            }
         });
 
         holder.btnTaskEdit.setOnClickListener(v -> {
-            Toast.makeText(v.getContext(), "Редактировать: " + currentItem.title, Toast.LENGTH_SHORT).show();
+            if (actionListener != null) {
+                actionListener.onEdit(currentItem);
+            }
         });
 
         holder.btnTaskDelete.setOnClickListener(v -> {
-            Toast.makeText(v.getContext(), "Удалить: " + currentItem.title, Toast.LENGTH_SHORT).show();
+            if (actionListener != null) {
+                actionListener.onDelete(currentItem);
+            }
         });
     }
 
@@ -129,6 +156,18 @@ public class HometaskRedactorFragment extends Fragment {
     private List<HometaskItem> studyTasks;
     private List<HometaskItem> personalTasks;
 
+    private SchedulelController schedulelController;
+    private UserController userController;
+    private boolean isStudyMode = true;
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        MySingleton singleton = MySingleton.getInstance(context.getApplicationContext());
+        schedulelController = singleton.getSchedulelController();
+        userController = singleton.getUserController();
+    }
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         hometaskRedactorViewModel =
@@ -153,45 +192,128 @@ public class HometaskRedactorFragment extends Fragment {
     }
 
     private void prepareDataLists() {
-        // Данные для "Учебных"
         studyTasks = new ArrayList<>();
-        studyTasks.add(new HometaskItem("Высшая математика", "Конечная дата: 08.09.2025", "Стр. 1 №1-8", true));
-        studyTasks.add(new HometaskItem("Информатика", "Конечная дата: 10.09.2025", "Подготовить доклад о структурах данных", true));
-        studyTasks.add(new HometaskItem("Физика", "Конечная дата: 12.09.2025", "Лабораторная работа №3", true));
-
-        // Данные для "Личных"
         personalTasks = new ArrayList<>();
-        personalTasks.add(new HometaskItem("Купить продукты", "Конечная дата: сегодня", "Молоко, хлеб, яйца", true));
-        // Последний элемент теперь не выполнен
-        personalTasks.add(new HometaskItem("Записаться в спортзал", "Конечная дата: до конца недели", "", false));
+
+        // Учебные задания из текущего расписания
+        Schedules currentSchedule = schedulelController.getCurrentSchedule();
+        if (currentSchedule != null) {
+            List<Schedules.Hometask> hometasks = currentSchedule.getHometasks();
+            for (int i = 0; i < hometasks.size(); i++) {
+                Schedules.Hometask ht = hometasks.get(i);
+                if (!ht.isPersonal()) { // только учебные
+                    String title = ht.getLesson();
+                    String due = ht.getEndpoint() != null ? "Конечная дата: " + ht.getEndpoint().toString() : "";
+                    String desc = ht.getTask();
+                    studyTasks.add(new HometaskItem(HometaskItem.TaskType.STUDY, i, title, due, desc, ht.isDone()));
+                }
+            }
+        }
+
+        // Личные задания из UserTask (UserController)
+        List<UserTask> tasks = userController.getAllTasks();
+        for (UserTask t : tasks) {
+            String title = t.getName();
+            String due = t.getEndpoint() != null ? "Конечная дата: " + t.getEndpoint().toString() : "";
+            String desc = t.getTask();
+            personalTasks.add(new HometaskItem(HometaskItem.TaskType.PERSONAL, t.getId(), title, due, desc, t.isDone()));
+        }
     }
 
     private void setupRecyclerView() {
         RecyclerView recyclerView = binding.rvHometasks;
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        // Передаем контекст в адаптер
         hometaskAdapter = new HometaskAdapter(new ArrayList<>(studyTasks), getContext());
+        hometaskAdapter.setOnHometaskActionListener(new HometaskAdapter.OnHometaskActionListener() {
+            @Override
+            public void onToggleComplete(HometaskItem item) {
+                if (item.type == HometaskItem.TaskType.STUDY) {
+                    Schedules current = schedulelController.getCurrentSchedule();
+                    if (current == null) return;
+                    List<Schedules.Hometask> list = current.getHometasks();
+                    if (item.indexOrId >= 0 && item.indexOrId < list.size()) {
+                        Schedules.Hometask ht = list.get(item.indexOrId);
+                        ht.setDone(!ht.isDone());
+                        item.isCompleted = ht.isDone();
+                        // сохраняем изменения расписания
+                        schedulelController.seteditableSchedule(current);
+                        schedulelController.saveEditableSchedule();
+                        Toast.makeText(getContext(), ht.isDone() ? "Задание выполнено" : "Задание не выполнено", Toast.LENGTH_SHORT).show();
+                        prepareDataLists();
+                        hometaskAdapter.updateData(isStudyMode ? studyTasks : personalTasks);
+                    }
+                } else {
+                    userController.toggleTaskDone(item.indexOrId);
+                    Toast.makeText(getContext(), "Статус личного задания изменен", Toast.LENGTH_SHORT).show();
+                    prepareDataLists();
+                    hometaskAdapter.updateData(isStudyMode ? studyTasks : personalTasks);
+                }
+            }
+
+            @Override
+            public void onEdit(HometaskItem item) {
+                Bundle args = new Bundle();
+                args.putString("mode", item.type == HometaskItem.TaskType.STUDY ? "study" : "personal");
+                args.putInt("taskId", item.indexOrId);
+                NavHostFragment.findNavController(HometaskRedactorFragment.this)
+                        .navigate(R.id.nav_add_hometask, args);
+            }
+
+            @Override
+            public void onDelete(HometaskItem item) {
+                if (item.type == HometaskItem.TaskType.STUDY) {
+                    Schedules current = schedulelController.getCurrentSchedule();
+                    if (current == null) return;
+                    List<Schedules.Hometask> list = current.getHometasks();
+                    if (item.indexOrId >= 0 && item.indexOrId < list.size()) {
+                        list.remove(item.indexOrId);
+                        schedulelController.seteditableSchedule(current);
+                        schedulelController.saveEditableSchedule();
+                        Toast.makeText(getContext(), "Учебное задание удалено", Toast.LENGTH_SHORT).show();
+                        prepareDataLists();
+                        hometaskAdapter.updateData(isStudyMode ? studyTasks : personalTasks);
+                    }
+                } else {
+                    userController.deleteTask(item.indexOrId);
+                    Toast.makeText(getContext(), "Личное задание удалено", Toast.LENGTH_SHORT).show();
+                    prepareDataLists();
+                    hometaskAdapter.updateData(isStudyMode ? studyTasks : personalTasks);
+                }
+            }
+        });
         recyclerView.setAdapter(hometaskAdapter);
     }
 
     private void setupClickListeners() {
         binding.cardStudyTasks.setOnClickListener(v -> {
+            isStudyMode = true;
             binding.cardStudyTasks.setStrokeWidth(dpToPx(1));
             binding.cardPersonalTasks.setStrokeWidth(0);
             binding.tvListHeader.setText("Учебные задания");
+            prepareDataLists();
             hometaskAdapter.updateData(studyTasks);
         });
 
         binding.cardPersonalTasks.setOnClickListener(v -> {
+            isStudyMode = false;
             binding.cardPersonalTasks.setStrokeWidth(dpToPx(1));
             binding.cardStudyTasks.setStrokeWidth(0);
             binding.tvListHeader.setText("Личные задания");
+            prepareDataLists();
             hometaskAdapter.updateData(personalTasks);
         });
 
         binding.btnAddHometask.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "Открытие экрана добавления задания", Toast.LENGTH_SHORT).show();
+            Bundle args = new Bundle();
+            args.putString("mode", isStudyMode ? "study" : "personal");
+            args.putInt("taskId", -1);
+            NavHostFragment.findNavController(HometaskRedactorFragment.this)
+                    .navigate(R.id.nav_add_hometask, args);
         });
+
+        // Перехватываем клики по кнопкам внутри элементов списка через tag и OnClickListener
+        // Для этого понадобится доработать адаптер, но чтобы минимально изменять код,
+        // будем использовать performClick через findViewById ниже в будущем шаге при необходимости.
     }
 
     private int dpToPx(int dp) {

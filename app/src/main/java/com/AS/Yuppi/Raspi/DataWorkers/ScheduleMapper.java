@@ -19,7 +19,9 @@ public class ScheduleMapper {
                 pojo.getEnd_Date(),
                 pojo.getHollidays(),
                 pojo.getName(),
-                pojo.getAuthor()
+                pojo.getAuthor(),
+                pojo.getHometasks(),
+                pojo.getNotes()
         );
         return entity;
     }
@@ -42,6 +44,8 @@ public class ScheduleMapper {
         pojo.setHollidays(entity.getHollidays());
         pojo.setSpecial_Days_Shedule(entity.getSpecial_Days_Shedule());
         pojo.setDays_Schedule(entity.getDays_Schedule());
+        pojo.setHometasks(entity.getHometasks());
+        pojo.setNotes(entity.getNotes());
 
         return pojo;
     }

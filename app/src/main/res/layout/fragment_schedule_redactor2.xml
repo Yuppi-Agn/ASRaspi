@@ -1,313 +1,838 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/white"
     tools:context=".ui.schedule_redactor2.ScheduleRedactor2Fragment">
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="8dp">
+            android:padding="16dp">
 
-            <HorizontalScrollView
+            <!-- Карточка: Основная информация -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:scrollbars="none">
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@android:color/white">
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <Spinner
-                        android:id="@+id/spinner_pageselect"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1" />
-
-                    <AutoCompleteTextView
-                        android:id="@+id/autoCompleteTextView_author"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:hint="Название"
-                        android:text="" />
-
-                    <Button
-                        android:id="@+id/button_save_load"
-                        style="@style/Widget.App.PrimaryButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Сохранить\nЗагрузить"
-                        android:textSize="10sp" />
-
-                    <Button
-                        android:id="@+id/button_fileload_filechecker"
-                        style="@style/Widget.App.PrimaryButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Загрузить из файла\nЗагрузить с ISPU"
-                        android:textSize="10sp" />
-
-                    <Button
-                        android:id="@+id/button_server_save_load"
-                        style="@style/Widget.App.PrimaryButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Server Сохранить\nЗагрузить"
-                        android:textSize="10sp" />
-                </LinearLayout>
-            </HorizontalScrollView>
-
-            <LinearLayout
-                android:id="@+id/layout_daychanger"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <HorizontalScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:orientation="horizontal">
-
-                        <EditText
-                            android:id="@+id/editText_day1"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:hint="Понедельник" />
-
-                        <EditText
-                            android:id="@+id/editText_day2"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:hint="Вторник" />
-
-                        <EditText
-                            android:id="@+id/editText_day3"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:hint="Среда" />
-                    </LinearLayout>
-                </HorizontalScrollView>
-
-                <HorizontalScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:orientation="horizontal">
-
-                        <EditText
-                            android:id="@+id/editText_day4"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:hint="Четверг" />
-
-                        <EditText
-                            android:id="@+id/editText_day5"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:hint="Пятница" />
-
-                        <EditText
-                            android:id="@+id/editText_day6"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:hint="Суббота" />
-
-                        <EditText
-                            android:id="@+id/editText_day7"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:hint="Воскресенье" />
-
-                    </LinearLayout>
-                </HorizontalScrollView>
-
-                <HorizontalScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <Spinner
-                            android:id="@+id/spinner_circlemode"
-                            android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1" />
-
-                        <Button
-                            android:id="@+id/button_changeweek"
-                            style="@style/Widget.App.PrimaryButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Поменять неделю\n1 неделя"
-                            android:textSize="10sp" />
-
-                        <Button
-                            android:id="@+id/button_firstweekchange"
-                            style="@style/Widget.App.PrimaryButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="1 неделя четная\n(Эта неделя нечетная)"
-                            android:textSize="10sp" />
-
-                        <Button
-                            android:id="@+id/button_cutwritings"
-                            style="@style/Widget.App.PrimaryButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Сократить запись"
-                            android:textSize="10sp" />
-                    </LinearLayout>
-                </HorizontalScrollView>
-
-                <!-- Блок для дат -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                    <EditText
-                        android:id="@+id/editTextDate_startdate"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:hint="Дата начала"
-                        android:inputType="date"/>
-
-                    <EditText
-                        android:id="@+id/editTextDate_enddate"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:hint="Дата конца"
-                        android:inputType="date"/>
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/layout_timechanger"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone">
-
-                <HorizontalScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <LinearLayout
+                    <TextView
                         android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:orientation="horizontal">
+                        android:layout_height="wrap_content"
+                        android:text="Основная информация"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:layout_marginBottom="16dp"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/nameInputLayout"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="2"
+                        android:layout_marginStart="12dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:hint="Название расписания"
+                        app:boxStrokeColor="@color/purple_500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/autoCompleteTextViewAuthor"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:imeOptions="actionDone"
+                            android:maxLines="1" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+                    <!-- Выбор страницы и название -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Начало (00:00):"/>
-
-                        <!-- ЗАВЕРШЕНЫ ВСЕ ТЕГИ -->
-                        <EditText android:id="@+id/editText_time_start_1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="1" android:inputType="time" />
-                        <EditText android:id="@+id/editText_time_start_2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="2" android:inputType="time"/>
-                        <EditText android:id="@+id/editText_time_start_3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="3" android:inputType="time"/>
-                        <EditText android:id="@+id/editText_time_start_4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="4" android:inputType="time"/>
-                        <EditText android:id="@+id/editText_time_start_5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="5" android:inputType="time"/>
-                        <EditText android:id="@+id/editText_time_start_6" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="6" android:inputType="time"/>
-                        <EditText android:id="@+id/editText_time_start_7" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="7" android:inputType="time"/>
-                        <EditText android:id="@+id/editText_time_start_8" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="8" android:inputType="time"/>
-                        <EditText android:id="@+id/editText_time_start_9" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="9" android:inputType="time"/>
-                        <EditText android:id="@+id/editText_time_start_10" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="10" android:inputType="time"/>
-                    </LinearLayout>
-                </HorizontalScrollView>
-
-                <HorizontalScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:orientation="horizontal">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Конец (00:00):  "/>
-
-                        <EditText android:id="@+id/editText_time_end_1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="1" android:inputType="time"/>
-                        <EditText android:id="@+id/editText_time_end_2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="2" android:inputType="time"/>
-                        <EditText android:id="@+id/editText_time_end_3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="3" android:inputType="time"/>
-                        <EditText android:id="@+id/editText_time_end_4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="4" android:inputType="time"/>
-                        <EditText android:id="@+id/editText_time_end_5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="5" android:inputType="time"/>
-                        <EditText android:id="@+id/editText_time_end_6" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="6" android:inputType="time"/>
-                        <EditText android:id="@+id/editText_time_end_7" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="7" android:inputType="time"/>
-                        <EditText android:id="@+id/editText_time_end_8" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="8" android:inputType="time"/>
-                        <EditText android:id="@+id/editText_time_end_9" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="9" android:inputType="time"/>
-                        <EditText android:id="@+id/editText_time_end_10" android:layout_width="wrap_content" android:layout_height="wrap_content" android:hint="10" android:inputType="time"/>
-                    </LinearLayout>
-                </HorizontalScrollView>
-
-                <HorizontalScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:orientation="horizontal">
+                            android:text="Страница:"
+                            android:textSize="14sp"
+                            android:textColor="@color/black"
+                            android:layout_marginEnd="8dp"/>
 
                         <Spinner
-                            android:id="@+id/spinner_time_dayselect"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
+                            android:id="@+id/spinnerPageselect"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/spinner_background"/>
+                    </LinearLayout>
 
-                        <Button
-                            android:id="@+id/button_time_saveday"
+                    <!-- Кнопки действий -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonSaveLoad"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Сохранить расписание"
+                        android:textSize="14sp"
+                        style="@style/Widget.Material3.Button"
+                        android:layout_marginBottom="8dp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonFileloadFilechecker"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Файл / ISPU"
+                            android:textSize="12sp"
+                            style="@style/Widget.Material3.Button"/>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonServerSaveLoad"
+                            android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:text="Сервер"
+                            android:textSize="12sp"
+                            style="@style/Widget.Material3.Button"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Блок редактирования ДНЕЙ -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/layoutDaychanger"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@android:color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Настройки расписания"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:layout_marginBottom="16dp"/>
+
+                    <!-- Выбор типа цикла и активной недели -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Сохранить день"/>
-                        <Button
-                            android:id="@+id/button_time_clear"
+                            android:text="Тип цикла:"
+                            android:textSize="14sp"
+                            android:textColor="@color/black"
+                            android:layout_marginEnd="8dp"/>
+
+                        <Spinner
+                            android:id="@+id/spinnerCirclemode"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/spinner_background"/>
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonChangeweek"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:text="Неделя 1"
+                            android:textSize="12sp"
+                            style="@style/Widget.Material3.Button"/>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonFirstweekchange"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:text="1 неделя четная"
+                            android:textSize="12sp"
+                            style="@style/Widget.Material3.Button"/>
+                    </LinearLayout>
+
+                    <!-- Даты действия расписания -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/date_picker_layout_start"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:hint="Дата начала"
+                            app:boxStrokeColor="@color/purple_500">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/editTextDateStartdate"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:focusable="false"
+                                android:clickable="true"
+                                android:drawableEnd="@drawable/ic_calendar_month_24"
+                                android:drawablePadding="8dp" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/date_picker_layout_end"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:hint="Дата окончания"
+                            app:boxStrokeColor="@color/purple_500">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/editTextDateEnddate"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:focusable="false"
+                                android:clickable="true"
+                                android:drawableEnd="@drawable/ic_calendar_month_24"
+                                android:drawablePadding="8dp" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+
+                    <!-- Дни недели -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Расписание по дням недели"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:layout_marginBottom="12dp"/>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:hint="Понедельник"
+                        app:boxStrokeColor="@color/purple_500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editTextDay1"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:minLines="2"
+                            android:gravity="top|start"
+                            android:inputType="textMultiLine" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:hint="Вторник"
+                        app:boxStrokeColor="@color/purple_500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editTextDay2"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:minLines="2"
+                            android:gravity="top|start"
+                            android:inputType="textMultiLine" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:hint="Среда"
+                        app:boxStrokeColor="@color/purple_500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editTextDay3"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:minLines="2"
+                            android:gravity="top|start"
+                            android:inputType="textMultiLine" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:hint="Четверг"
+                        app:boxStrokeColor="@color/purple_500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editTextDay4"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:minLines="2"
+                            android:gravity="top|start"
+                            android:inputType="textMultiLine" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:hint="Пятница"
+                        app:boxStrokeColor="@color/purple_500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editTextDay5"
+                    android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:minLines="2"
+                            android:gravity="top|start"
+                            android:inputType="textMultiLine" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:hint="Суббота"
+                        app:boxStrokeColor="@color/purple_500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editTextDay6"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:minLines="2"
+                            android:gravity="top|start"
+                            android:inputType="textMultiLine" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:hint="Воскресенье"
+                        app:boxStrokeColor="@color/purple_500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editTextDay7"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:minLines="2"
+                            android:gravity="top|start"
+                            android:inputType="textMultiLine" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Блок редактирования ВРЕМЕНИ уроков -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/layoutTimechanger"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@android:color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Настройка времени уроков"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:layout_marginBottom="16dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Время начала уроков (чч:мм)"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:layout_marginBottom="8dp"/>
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:scrollbars="none">
+
+                    <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Очистить"/>
+                            android:orientation="horizontal"
+                            android:padding="4dp">
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="1"
+                                app:boxStrokeColor="@color/purple_500"
+                                app:boxCornerRadiusTopStart="8dp"
+                                app:boxCornerRadiusTopEnd="8dp"
+                                app:boxCornerRadiusBottomStart="8dp"
+                                app:boxCornerRadiusBottomEnd="8dp">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeStart1"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="2"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeStart2"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="3"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeStart3"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="4"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeStart4"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="5"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeStart5"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="6"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeStart6"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="7"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeStart7"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="8"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeStart8"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="9"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeStart9"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="10"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeStart10"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
                 </HorizontalScrollView>
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Время окончания уроков (чч:мм)"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:layout_marginBottom="8dp"/>
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:scrollbars="none">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:padding="4dp">
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="1"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeEnd1"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="2"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeEnd2"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="3"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeEnd3"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="4"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeEnd4"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="5"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeEnd5"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="6"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeEnd6"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="7"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeEnd7"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="8"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeEnd8"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="9"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeEnd9"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                                android:hint="10"
+                                app:boxStrokeColor="@color/purple_500">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextTimeEnd10"
+                                    android:layout_width="80dp"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="time"
+                                    android:gravity="center" />
+                            </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+                    <!-- Выбор дня для применения времён и управление -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="День:"
+                            android:textSize="14sp"
+                            android:textColor="@color/black"
+                            android:layout_marginEnd="8dp"/>
+
+                        <Spinner
+                            android:id="@+id/spinnerTimeDayselect"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/spinner_background"/>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonTimeSaveday"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:text="Сохранить"
+                            android:textSize="12sp"
+                            style="@style/Widget.Material3.Button"/>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonTimeClear"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:text="Очистить"
+                            android:textSize="12sp"
+                            style="@style/Widget.Material3.Button"/>
+                    </LinearLayout>
+
                 <TextView
-                    android:id="@+id/TextView_timelist"
+                        android:id="@+id/TextViewTimelist"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
+                        android:layout_height="wrap_content"
+                        android:textSize="14sp"
+                        android:textColor="@android:color/darker_gray"
+                        android:padding="8dp"
+                        android:background="@drawable/rounded_background_light"
+                        android:minHeight="48dp" />
 
             </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

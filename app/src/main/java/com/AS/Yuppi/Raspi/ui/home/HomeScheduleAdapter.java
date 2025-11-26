@@ -29,10 +29,20 @@ class ScheduleLesson {
         }
     }
 
+    boolean isHeader = false;
+    String headerText;
     LessonType type;
     String number, time, subjectName, teacherName, classroom;
 
+    // Constructor for header
+    public ScheduleLesson(String headerText) {
+        this.isHeader = true;
+        this.headerText = headerText;
+    }
+
+    // Constructor for lesson
     public ScheduleLesson(LessonType type, String number, String time, String subjectName, String teacherName, String classroom) {
+        this.isHeader = false;
         this.type = type;
         this.number = number;
         this.time = time;
@@ -43,36 +53,67 @@ class ScheduleLesson {
 }
 
 
-public class HomeScheduleAdapter extends RecyclerView.Adapter<HomeScheduleAdapter.LessonViewHolder> {
+public class HomeScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private final List<ScheduleLesson> lessonList;
+    private static final int VIEW_TYPE_HEADER = 0;
+    private static final int VIEW_TYPE_LESSON = 1;
 
     public HomeScheduleAdapter(List<ScheduleLesson> lessonList) {
         this.lessonList = lessonList;
     }
 
+    @Override
+    public int getItemViewType(int position) {
+        return lessonList.get(position).isHeader ? VIEW_TYPE_HEADER : VIEW_TYPE_LESSON;
+    }
+
     @NonNull
     @Override
-    public LessonViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_schedule, parent, false);
-        return new LessonViewHolder(view);
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (viewType == VIEW_TYPE_HEADER) {
+            // Create a simple TextView for header
+            TextView headerView = new TextView(parent.getContext());
+            headerView.setPadding(16, 16, 16, 8);
+            headerView.setTextSize(18);
+            headerView.setTypeface(null, android.graphics.Typeface.BOLD);
+            headerView.setTextColor(ContextCompat.getColor(parent.getContext(), android.R.color.black));
+            return new HeaderViewHolder(headerView);
+        } else {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_schedule, parent, false);
+            return new LessonViewHolder(view);
+        }
     }
 
     @Override
-    public void onBindViewHolder(@NonNull LessonViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         ScheduleLesson lesson = lessonList.get(position);
 
-        // Устанавливаем текст и цвет кружка
-        holder.tvClassType.setText(lesson.type.getShortName());
-        holder.setClassTypeColor(lesson.type); // <--- ВЫЗЫВАЕМ НОВЫЙ МЕТОД
+        if (holder instanceof HeaderViewHolder) {
+            ((HeaderViewHolder) holder).textView.setText(lesson.headerText);
+        } else if (holder instanceof LessonViewHolder) {
+            LessonViewHolder lessonHolder = (LessonViewHolder) holder;
+            // Устанавливаем текст и цвет кружка
+            lessonHolder.tvClassType.setText(lesson.type.getShortName());
+            lessonHolder.setClassTypeColor(lesson.type);
 
-        // Заполняем остальные поля
-        holder.tvClassNumber.setText(lesson.number);
-        holder.tvClassTime.setText(lesson.time);
-        holder.tvSubjectName.setText(lesson.subjectName);
-        holder.tvTeacherName.setText(lesson.teacherName);
-        holder.tvClassroom.setText(lesson.classroom);
-        holder.tvClassDetail.setVisibility(View.GONE);
+            // Заполняем остальные поля
+            lessonHolder.tvClassNumber.setText(lesson.number);
+            lessonHolder.tvClassTime.setText(lesson.time);
+            lessonHolder.tvSubjectName.setText(lesson.subjectName);
+            lessonHolder.tvTeacherName.setText(lesson.teacherName);
+            lessonHolder.tvClassroom.setText(lesson.classroom);
+            lessonHolder.tvClassDetail.setVisibility(View.GONE);
+        }
+    }
+
+    static class HeaderViewHolder extends RecyclerView.ViewHolder {
+        TextView textView;
+
+        HeaderViewHolder(TextView itemView) {
+            super(itemView);
+            this.textView = itemView;
+        }
     }
     public void updateLessons(List<ScheduleLesson> newLessons) {
         lessonList.clear();

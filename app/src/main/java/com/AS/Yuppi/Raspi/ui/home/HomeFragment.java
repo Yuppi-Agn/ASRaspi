@@ -8,6 +8,8 @@ import com.AS.Yuppi.Raspi.R;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,6 +27,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.AS.Yuppi.Raspi.databinding.FragmentHomeBinding;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +44,12 @@ public class HomeFragment extends Fragment {
 
     private SchedulelController schedulelController;
     private HomeScheduleAdapter scheduleAdapter;
+    private WeekDayAdapter weekDayAdapter;
     private int currentDayOffset = 0;
+    private boolean isWeekViewMode = false;
+    private int currentWeekOffset = 0;
+    private Handler countdownHandler;
+    private Runnable countdownRunnable;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -65,6 +73,7 @@ public class HomeFragment extends Fragment {
         // Инициализируем UI
         setupRecyclerView();
         setupClickListeners();
+        setupCountdownTimer();
 
         // --- ГЛАВНОЕ ИСПРАВЛЕНИЕ ---
         // Используем LifecycleOwner для безопасной подписки на события.
@@ -88,28 +97,81 @@ public class HomeFragment extends Fragment {
         scheduleRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         scheduleRecyclerView.setNestedScrollingEnabled(false);
         scheduleAdapter = new HomeScheduleAdapter(new ArrayList<>());
+        weekDayAdapter = new WeekDayAdapter(new ArrayList<>());
         scheduleRecyclerView.setAdapter(scheduleAdapter);
     }
 
     private void setupClickListeners() {
         if (binding == null) return;
+        
+        // Day/Week navigation buttons
         binding.btnPrevDay.setOnClickListener(v -> {
-            currentDayOffset--;
-            updateScheduleData();
+            if (isWeekViewMode) {
+                currentWeekOffset--;
+                updateScheduleData();
+            } else {
+                currentDayOffset--;
+                updateScheduleData();
+            }
         });
 
         binding.btnNextDay.setOnClickListener(v -> {
-            currentDayOffset++;
-            updateScheduleData();
+            if (isWeekViewMode) {
+                currentWeekOffset++;
+                updateScheduleData();
+            } else {
+                currentDayOffset++;
+                updateScheduleData();
+            }
         });
 
-        binding.btnAddHometask.setOnClickListener(v ->
-                NavHostFragment.findNavController(HomeFragment.this)
-                        .navigate(R.id.action_nav_home_to_addHometaskFragment));
+        // Action buttons
+        binding.btnAddHometask.setOnClickListener(v -> {
+            Bundle args = new Bundle();
+            args.putString("mode", "study");
+            args.putInt("taskId", -1);
+            NavHostFragment.findNavController(HomeFragment.this)
+                    .navigate(R.id.action_nav_home_to_addHometaskFragment, args);
+        });
 
         binding.btnAddLectureNote.setOnClickListener(v ->
                 NavHostFragment.findNavController(HomeFragment.this)
                         .navigate(R.id.action_nav_home_to_addLectureFragment));
+
+        // Add event button
+        if (binding.btnAddEvent != null) {
+            binding.btnAddEvent.setOnClickListener(v -> {
+                Bundle args = new Bundle();
+                args.putInt("eventId", -1);
+                NavHostFragment.findNavController(HomeFragment.this)
+                        .navigate(R.id.action_nav_home_to_event_editor, args);
+            });
+        }
+
+        // Show week button - toggle between day and week view
+        if (binding.btnShowWeek != null) {
+            binding.btnShowWeek.setOnClickListener(v -> {
+                isWeekViewMode = !isWeekViewMode;
+                RecyclerView scheduleRecyclerView = binding.scheduleList;
+                
+                if (isWeekViewMode) {
+                    // Switch to week view - reset to current week
+                    currentWeekOffset = 0;
+                    binding.btnShowWeek.setText("Показать на день");
+                    // Change RecyclerView to horizontal scrolling with week adapter
+                    scheduleRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+                    scheduleRecyclerView.setAdapter(weekDayAdapter);
+                } else {
+                    // Switch to day view - reset to today
+                    currentDayOffset = 0;
+                    binding.btnShowWeek.setText("Показать на неделю");
+                    // Change RecyclerView back to vertical scrolling with day adapter
+                    scheduleRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+                    scheduleRecyclerView.setAdapter(scheduleAdapter);
+                }
+                updateScheduleData();
+            });
+        }
     }
 
     private void updateScheduleData() {
@@ -119,6 +181,7 @@ public class HomeFragment extends Fragment {
         }
 
         updateDateHeader();
+        updateTodayHeader();
 
         Schedules currentSchedule = schedulelController.getCurrentSchedule();
         if (currentSchedule == null) {
@@ -127,26 +190,132 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        // Получаем расписание на выбранный день
-        Day_Schedule daySchedule = currentSchedule.getScheduleForDayOffset(currentDayOffset);
-        if (daySchedule == null) {
-            Log.w("HomeFragment", "Расписание на день со смещением " + currentDayOffset + " не найдено.");
-            scheduleAdapter.updateLessons(new ArrayList<>()); // Очищаем список
-            return;
+        if (isWeekViewMode) {
+            // Week view: show horizontal scrolling week schedule
+            setupWeekView(currentSchedule);
+        } else {
+            // Day view: show single day schedule
+            Day_Schedule daySchedule = currentSchedule.getScheduleForDayOffset(currentDayOffset);
+            if (daySchedule == null) {
+                Log.w("HomeFragment", "Расписание на день со смещением " + currentDayOffset + " не найдено.");
+                scheduleAdapter.updateLessons(new ArrayList<>()); // Очищаем список
+                return;
+            }
+
+            // ИСПОЛЬЗУЕМ НОВЫЙ МЕТОД-ПАРСЕР
+            List<ScheduleLesson> lessons = parseDaySchedule(daySchedule, currentSchedule);
+
+            // Обновляем RecyclerView
+            scheduleAdapter.updateLessons(lessons);
         }
-
-        // ИСПОЛЬЗУЕМ НОВЫЙ МЕТОД-ПАРСЕР
-        List<ScheduleLesson> lessons = parseDaySchedule(daySchedule, currentSchedule);
-
-        // Обновляем RecyclerView
-        scheduleAdapter.updateLessons(lessons);
     }
+
+    private void updateTodayHeader() {
+        if (binding == null) return;
+        
+        if (isWeekViewMode) {
+            // In week view, don't show the "Сегодня" header and "Следующее занятие" block
+            binding.tvTodayHeader.setVisibility(View.GONE);
+            if (binding.nextClassContainer != null) {
+                binding.nextClassContainer.setVisibility(View.GONE);
+            }
+        } else {
+            // In day view, show relative date and "Следующее занятие" block
+            binding.tvTodayHeader.setVisibility(View.VISIBLE);
+            if (binding.nextClassContainer != null) {
+                binding.nextClassContainer.setVisibility(View.VISIBLE);
+            }
+            LocalDate targetDate = LocalDate.now().plusDays(currentDayOffset);
+            String relativeDate = getRelativeDateString(targetDate);
+            binding.tvTodayHeader.setText(relativeDate + ":");
+        }
+    }
+
+    private void setupWeekView(Schedules currentSchedule) {
+        // Week view: create a list of day cards
+        List<WeekDayAdapter.WeekDayData> weekDays = new ArrayList<>();
+        LocalDate weekStart = LocalDate.now().plusWeeks(currentWeekOffset).with(java.time.DayOfWeek.MONDAY);
+        
+        for (int i = 0; i < 7; i++) {
+            LocalDate dayDate = weekStart.plusDays(i);
+            int dayOffset = (int) java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), dayDate);
+            Day_Schedule daySchedule = currentSchedule.getScheduleForDayOffset(dayOffset);
+            
+            // Get lessons for this day
+            List<ScheduleLesson> dayLessons = new ArrayList<>();
+            if (daySchedule != null) {
+                dayLessons = parseDaySchedule(daySchedule, currentSchedule);
+            }
+            
+            weekDays.add(new WeekDayAdapter.WeekDayData(dayDate, dayLessons));
+        }
+        
+        if (weekDayAdapter == null) {
+            weekDayAdapter = new WeekDayAdapter(weekDays);
+            if (binding != null) {
+                binding.scheduleList.setAdapter(weekDayAdapter);
+            }
+        } else {
+            weekDayAdapter.updateWeekDays(weekDays);
+        }
+    }
+
+    private String getRelativeDateString(LocalDate date) {
+        LocalDate today = LocalDate.now();
+        long daysDiff = java.time.temporal.ChronoUnit.DAYS.between(today, date);
+        
+        if (daysDiff == 0) {
+            return "Сегодня";
+        } else if (daysDiff == 1) {
+            return "Завтра";
+        } else if (daysDiff == -1) {
+            return "Вчера";
+        } else if (daysDiff == 2) {
+            return "Через 2 дня";
+        } else if (daysDiff == 3) {
+            return "Через 3 дня";
+        } else if (daysDiff == 4) {
+            return "Через 4 дня";
+        } else if (daysDiff == 5) {
+            return "Через 5 дней";
+        } else if (daysDiff == 6) {
+            return "Через 6 дней";
+        } else if (daysDiff == 7) {
+            return "Через неделю";
+        } else if (daysDiff == -2) {
+            return "2 дня назад";
+        } else if (daysDiff == -3) {
+            return "3 дня назад";
+        } else if (daysDiff == -4) {
+            return "4 дня назад";
+        } else if (daysDiff == -5) {
+            return "5 дней назад";
+        } else if (daysDiff == -6) {
+            return "6 дней назад";
+        } else if (daysDiff == -7) {
+            return "Неделю назад";
+        } else {
+            return date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        }
+    }
+
 
     private void updateDateHeader() {
         if (binding == null) return;
-        LocalDate targetDate = LocalDate.now().plusDays(currentDayOffset);
-        String formattedDate = targetDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-        binding.tvCurrentDate.setText(formattedDate);
+        
+        if (isWeekViewMode) {
+            // Week view: show week range (Monday to Sunday)
+            LocalDate weekStart = LocalDate.now().plusWeeks(currentWeekOffset).with(java.time.DayOfWeek.MONDAY);
+            LocalDate weekEnd = weekStart.plusDays(6);
+            String weekRange = weekStart.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + 
+                             " - " + weekEnd.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+            binding.tvCurrentDate.setText(weekRange);
+        } else {
+            // Day view: show single date with format dd.MM.yyyy
+            LocalDate targetDate = LocalDate.now().plusDays(currentDayOffset);
+            String formattedDate = targetDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+            binding.tvCurrentDate.setText(formattedDate);
+        }
     }
     private List<ScheduleLesson> parseDaySchedule(Day_Schedule daySchedule, Schedules mainSchedule) {
         List<ScheduleLesson> lessonList = new ArrayList<>();
@@ -247,9 +416,120 @@ public class HomeFragment extends Fragment {
         return String.format(Locale.getDefault(), "%02d:%02d", hours, minutes);
     }
 
+    private void setupCountdownTimer() {
+        countdownHandler = new Handler(Looper.getMainLooper());
+        countdownRunnable = new Runnable() {
+            @Override
+            public void run() {
+                updateCountdown();
+                countdownHandler.postDelayed(this, 1000); // Update every second
+            }
+        };
+        countdownHandler.post(countdownRunnable);
+    }
+
+    private void updateCountdown() {
+        if (binding == null) return;
+
+        Schedules currentSchedule = schedulelController.getCurrentSchedule();
+        if (currentSchedule == null) {
+            binding.tvNextClassTime.setText("");
+            return;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = now.toLocalDate();
+        int currentMinutes = now.getHour() * 60 + now.getMinute();
+
+        // Get today's schedule
+        Day_Schedule daySchedule = currentSchedule.getScheduleForDayOffset(0);
+        if (daySchedule == null) {
+            binding.tvNextClassTime.setText("");
+            return;
+        }
+
+        String lessonsRaw = daySchedule.get_lesson();
+        if (lessonsRaw == null || lessonsRaw.trim().isEmpty()) {
+            binding.tvNextClassTime.setText("");
+            return;
+        }
+
+        // Find current or next lesson
+        String[] lessonBlocks = lessonsRaw.split("\\s*(?=\\d+\\))");
+        Integer currentLessonStart = null;
+        Integer currentLessonEnd = null;
+        Integer nextLessonStart = null;
+
+        for (String block : lessonBlocks) {
+            try {
+                String lessonNumber = block.substring(0, block.indexOf(')'));
+                int lessonIndex = Integer.parseInt(lessonNumber) - 1;
+                
+                Integer startTime = daySchedule.get_Lesson_StartTime(lessonIndex);
+                Integer endTime = daySchedule.get_Lesson_EndTime(lessonIndex);
+                
+                if (startTime == null || endTime == null || startTime == 0) continue;
+
+                // Check if this is the current lesson
+                if (currentMinutes >= startTime && currentMinutes < endTime) {
+                    currentLessonStart = startTime;
+                    currentLessonEnd = endTime;
+                }
+                // Check if this is the next lesson
+                if (nextLessonStart == null && currentMinutes < startTime) {
+                    nextLessonStart = startTime;
+                }
+            } catch (Exception e) {
+                // Skip invalid lesson blocks
+            }
+        }
+
+        // Update countdown text
+        if (currentLessonStart != null && currentLessonEnd != null) {
+            // Currently in a lesson - show time until end
+            int minutesRemaining = currentLessonEnd - currentMinutes;
+            if (minutesRemaining > 0) {
+                int hours = minutesRemaining / 60;
+                int mins = minutesRemaining % 60;
+                if (hours > 0) {
+                    binding.tvNextClassTime.setText(String.format(Locale.getDefault(), 
+                        "До конца занятия осталось %d ч %d мин", hours, mins));
+                } else {
+                    binding.tvNextClassTime.setText(String.format(Locale.getDefault(), 
+                        "До конца занятия осталось %d мин", mins));
+                }
+            } else {
+                binding.tvNextClassTime.setText("Занятие закончилось");
+            }
+        } else if (nextLessonStart != null) {
+            // Next lesson today
+            int minutesRemaining = nextLessonStart - currentMinutes;
+            if (minutesRemaining > 0) {
+                int hours = minutesRemaining / 60;
+                int mins = minutesRemaining % 60;
+                if (hours > 0) {
+                    binding.tvNextClassTime.setText(String.format(Locale.getDefault(), 
+                        "До начала занятия осталось %d ч %d мин", hours, mins));
+                } else {
+                    binding.tvNextClassTime.setText(String.format(Locale.getDefault(), 
+                        "До начала занятия осталось %d мин", mins));
+                }
+            } else {
+                binding.tvNextClassTime.setText("Занятие начинается");
+            }
+        } else {
+            // No more lessons today
+            binding.tvNextClassTime.setText("Занятия закончились");
+        }
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        // Stop countdown timer
+        if (countdownHandler != null && countdownRunnable != null) {
+            countdownHandler.removeCallbacks(countdownRunnable);
+        }
         // При уничтожении View, обнуляем binding, чтобы избежать утечек памяти.
         binding = null;
     }

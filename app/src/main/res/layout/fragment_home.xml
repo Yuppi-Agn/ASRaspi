@@ -62,6 +62,7 @@
                 tools:ignore="HardcodedText"/>
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_add_event"
                 android:layout_width="0dp"
                 android:layout_height="76dp"
                 android:layout_weight="1"
@@ -77,6 +78,7 @@
                 tools:ignore="HardcodedText"/>
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_show_week"
                 android:layout_width="0dp"
                 android:layout_height="76dp"
                 android:layout_weight="1"
@@ -179,7 +181,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Перелистните для выбора дня"
+                    android:text="Нажмите для выбора дня"
                     android:textSize="12sp"
                     android:textColor="@android:color/darker_gray"
                     android:layout_marginTop="4dp"
@@ -209,10 +211,11 @@
                 android:clipToPadding="false"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:listitem="@layout/item_schedule"
-                tools:itemCount="3"/>
+                tools:itemCount="5"/>
 
             <!-- Блок "Следующее занятие" -->
             <LinearLayout
+                android:id="@+id/next_class_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"

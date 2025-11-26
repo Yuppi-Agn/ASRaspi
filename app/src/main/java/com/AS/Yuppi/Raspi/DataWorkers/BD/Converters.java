@@ -3,6 +3,7 @@ package com.AS.Yuppi.Raspi.DataWorkers.BD;
 import androidx.room.TypeConverter;
 
 import com.AS.Yuppi.Raspi.DataWorkers.Day_Schedule;
+import com.AS.Yuppi.Raspi.DataWorkers.Schedules;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
@@ -94,6 +95,38 @@ public class Converters {
 
     @TypeConverter
     public static String fromDayScheduleList(List<Day_Schedule> list) {
+        return gson.toJson(list);
+    }
+
+    // --- Преобразование для List<Schedules.Hometask> ---
+
+    @TypeConverter
+    public static List<Schedules.Hometask> fromHometaskListString(String value) {
+        if (value == null) {
+            return new ArrayList<>();
+        }
+        Type listType = new TypeToken<List<Schedules.Hometask>>() {}.getType();
+        return gson.fromJson(value, listType);
+    }
+
+    @TypeConverter
+    public static String fromHometaskList(List<Schedules.Hometask> list) {
+        return gson.toJson(list);
+    }
+
+    // --- Преобразование для List<Schedules.Note> ---
+
+    @TypeConverter
+    public static List<Schedules.Note> fromNoteListString(String value) {
+        if (value == null) {
+            return new ArrayList<>();
+        }
+        Type listType = new TypeToken<List<Schedules.Note>>() {}.getType();
+        return gson.fromJson(value, listType);
+    }
+
+    @TypeConverter
+    public static String fromNoteList(List<Schedules.Note> list) {
         return gson.toJson(list);
     }
     @TypeConverter
