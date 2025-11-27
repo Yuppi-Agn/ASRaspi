@@ -584,7 +584,14 @@ public class ScheduleRedactor2Fragment extends Fragment {
      * Пока просто выводит имена в лог.
      */
     private void fetchSchedulesFromServer() {
-        ApiService apiService = NetworkClient.getApiService();
+        ApiService apiService;
+        try {
+            apiService = NetworkClient.getApiService();
+        } catch (IllegalStateException e) {
+            Log.e("NetworkRequest", "Server not found via mDNS: " + e.getMessage());
+            Toast.makeText(getContext(), "Сервер не найден через mDNS. Убедитесь, что сервер запущен и mDNS включен.", Toast.LENGTH_LONG).show();
+            return;
+        }
         Call<List<ApiSchedule>> call = apiService.getSchedules();
 
         call.enqueue(new Callback<List<ApiSchedule>>() {
@@ -638,7 +645,14 @@ public class ScheduleRedactor2Fragment extends Fragment {
         ApiSchedule scheduleToSend = new ApiSchedule(localSchedule.getName(), apiDays);
 
         // 2. Отправляем запрос
-        ApiService apiService = NetworkClient.getApiService();
+        ApiService apiService;
+        try {
+            apiService = NetworkClient.getApiService();
+        } catch (IllegalStateException e) {
+            Log.e("NetworkRequest", "Server not found via mDNS: " + e.getMessage());
+            Toast.makeText(getContext(), "Сервер не найден через mDNS. Убедитесь, что сервер запущен и mDNS включен.", Toast.LENGTH_LONG).show();
+            return;
+        }
         Call<Void> call = apiService.postSchedule(scheduleToSend);
 
         call.enqueue(new Callback<Void>() {

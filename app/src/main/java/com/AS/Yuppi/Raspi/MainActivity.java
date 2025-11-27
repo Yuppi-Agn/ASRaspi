@@ -26,6 +26,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Инициализируем NetworkClient для mDNS поиска
+        com.AS.Yuppi.Raspi.DataWorkers.NetworkClient.initialize(this);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());

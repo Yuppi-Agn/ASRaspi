@@ -56,6 +56,17 @@
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
 
+        <!-- Переключатель личное/публичное для заметок -->
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switch_personal_note"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Личная заметка"
+            app:layout_constraintTop_toBottomOf="@id/top_controls_container"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
         <!-- Большое поле для ввода текста лекции -->
         <EditText
             android:id="@+id/et_lecture_notes"
@@ -70,7 +81,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/top_controls_container" />
+            app:layout_constraintTop_toBottomOf="@id/switch_personal_note" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

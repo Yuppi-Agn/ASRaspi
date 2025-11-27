@@ -91,8 +91,6 @@ public class Schedules {
             return null; // Расписание не заполнено
         }
 
-        // --- 4. ГЛАВНОЕ ИСПРАВЛЕНИЕ: МАТЕМАТИЧЕСКИ КОРРЕКТНЫЙ РАСЧЕТ ИНДЕКСА ---
-
         // Считаем количество дней от даты начала до целевой даты
         long daysBetween = ChronoUnit.DAYS.between(Start_Date, targetDate);
 

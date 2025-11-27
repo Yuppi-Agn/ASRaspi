@@ -118,6 +118,40 @@
             app:barrierDirection="bottom"
             app:constraint_referenced_ids="top_controls_container,personal_task_container" />
 
+        <!-- Контейнер для переключателей (только для учебных задач) -->
+        <LinearLayout
+            android:id="@+id/switch_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/top_barrier"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+            
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switch_personal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Личное задание"
+                android:layout_marginEnd="16dp" />
+            
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switch_done"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Выполнено" />
+        </LinearLayout>
+
+        <!-- Barrier для переключателей -->
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/switch_barrier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="bottom"
+            app:constraint_referenced_ids="top_barrier,switch_container" />
+
         <EditText
             android:id="@+id/et_task_description"
             android:layout_width="0dp"
@@ -131,7 +165,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/top_barrier" />
+            app:layout_constraintTop_toBottomOf="@id/switch_barrier" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

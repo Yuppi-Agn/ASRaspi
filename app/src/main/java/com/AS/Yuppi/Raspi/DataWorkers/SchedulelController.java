@@ -721,7 +721,14 @@ public class SchedulelController{
             }
         }
         
-        ApiService apiService = NetworkClient.getApiService();
+        ApiService apiService;
+        try {
+            apiService = NetworkClient.getApiService();
+        } catch (IllegalStateException e) {
+            Log.e("SchedulelController", "Server not found via mDNS: " + e.getMessage());
+            if (callback != null) callback.onError("Сервер не найден через mDNS. Убедитесь, что сервер запущен и mDNS включен.");
+            return;
+        }
         // Используем syncUploadSchedules для обновления с проверкой UpdateDate
         Call<Void> call = apiService.syncUploadSchedules(apiSchedules);
         
@@ -749,7 +756,14 @@ public class SchedulelController{
      * Загружает все расписания с сервера и сохраняет в БД с синхронизацией (обновление если UpdateDate новее).
      */
     public void downloadAllSchedulesFromServer(SyncCallback callback) {
-        ApiService apiService = NetworkClient.getApiService();
+        ApiService apiService;
+        try {
+            apiService = NetworkClient.getApiService();
+        } catch (IllegalStateException e) {
+            Log.e("SchedulelController", "Server not found via mDNS: " + e.getMessage());
+            if (callback != null) callback.onError("Сервер не найден через mDNS. Убедитесь, что сервер запущен и mDNS включен.");
+            return;
+        }
         // Используем syncDownloadSchedules для получения всех расписаний
         Call<List<ApiSchedule>> call = apiService.syncDownloadSchedules();
         
@@ -897,7 +911,14 @@ public class SchedulelController{
             }
         }
         
-        ApiService apiService = NetworkClient.getApiService();
+        ApiService apiService;
+        try {
+            apiService = NetworkClient.getApiService();
+        } catch (IllegalStateException e) {
+            Log.e("SchedulelController", "Server not found via mDNS: " + e.getMessage());
+            if (callback != null) callback.onError("Сервер не найден через mDNS. Убедитесь, что сервер запущен и mDNS включен.");
+            return;
+        }
         // Используем syncUploadSchedules для обновления с проверкой UpdateDate
         Call<Void> call = apiService.syncUploadSchedules(apiSchedules);
         
@@ -925,7 +946,14 @@ public class SchedulelController{
      * Загружает определенное расписание с сервера по имени и автору.
      */
     public void downloadScheduleFromServer(String author, String name, SyncCallback callback) {
-        ApiService apiService = NetworkClient.getApiService();
+        ApiService apiService;
+        try {
+            apiService = NetworkClient.getApiService();
+        } catch (IllegalStateException e) {
+            Log.e("SchedulelController", "Server not found via mDNS: " + e.getMessage());
+            if (callback != null) callback.onError("Сервер не найден через mDNS. Убедитесь, что сервер запущен и mDNS включен.");
+            return;
+        }
         Call<ApiSchedule> call = apiService.getScheduleByNameAndAuthor(author, name);
         
         call.enqueue(new Callback<ApiSchedule>() {

@@ -107,11 +107,13 @@ public class AddHometaskFragment extends Fragment {
             // Для личных задач: показываем контейнер с названием и датой, скрываем спиннер предметов
             binding.personalTaskContainer.setVisibility(View.VISIBLE);
             binding.topControlsContainer.setVisibility(View.GONE);
+            binding.switchContainer.setVisibility(View.GONE);
             binding.etTaskDescription.setHint("Введите описание задания...");
         } else {
             // Для учебных задач: показываем спиннер предметов, скрываем контейнер для личных задач
             binding.personalTaskContainer.setVisibility(View.GONE);
             binding.topControlsContainer.setVisibility(View.VISIBLE);
+            binding.switchContainer.setVisibility(View.VISIBLE);
             binding.etTaskDescription.setHint("Введите описание задания...");
         }
     }
@@ -231,6 +233,16 @@ public class AddHometaskFragment extends Fragment {
 
             // Описание
             binding.etTaskDescription.setText(ht.getTask());
+            
+            // Личное/публичное
+            if (binding.switchContainer.getVisibility() == View.VISIBLE) {
+                binding.switchPersonal.setChecked(ht.isPersonal());
+            }
+            
+            // Выполнено
+            if (binding.switchContainer.getVisibility() == View.VISIBLE) {
+                binding.switchDone.setChecked(ht.isDone());
+            }
 
         } else {
             UserTask t = userController.getTaskById(taskId);
@@ -336,10 +348,20 @@ public class AddHometaskFragment extends Fragment {
                 ht.setLesson(subject);
                 ht.setTask(description);
                 ht.setEndpoint(endpoint);
+                // Обновляем флаги
+                if (binding.switchContainer.getVisibility() == View.VISIBLE) {
+                    ht.setPersonal(binding.switchPersonal.isChecked());
+                    ht.setDone(binding.switchDone.isChecked());
+                }
             } else {
                 // Добавление нового
                 Schedules.Hometask ht = current.addHometask(subject, description, endpoint);
-                ht.setPersonal(false);
+                if (binding.switchContainer.getVisibility() == View.VISIBLE) {
+                    ht.setPersonal(binding.switchPersonal.isChecked());
+                    ht.setDone(binding.switchDone.isChecked());
+                } else {
+                    ht.setPersonal(false);
+                }
             }
             
             // Сохраняем изменения в БД

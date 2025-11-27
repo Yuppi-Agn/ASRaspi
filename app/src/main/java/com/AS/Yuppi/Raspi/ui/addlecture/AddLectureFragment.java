@@ -96,6 +96,9 @@ public class AddLectureFragment extends Fragment {
         }
         
         binding.etLectureNotes.setText(note.getData());
+        
+        // Личное/публичное
+        binding.switchPersonalNote.setChecked(note.isPersonal());
     }
     
     private void saveNote() {
@@ -165,10 +168,11 @@ public class AddLectureFragment extends Fragment {
             Schedules.Note note = notes.get(noteIndex);
             note.setLesson(subject);
             note.setData(data);
+            note.setPersonal(binding.switchPersonalNote.isChecked());
         } else {
             // Добавление новой заметки
             Schedules.Note note = current.addNote(subject, data);
-            note.setPersonal(false);
+            note.setPersonal(binding.switchPersonalNote.isChecked());
         }
         
         // Сохраняем изменения в БД
