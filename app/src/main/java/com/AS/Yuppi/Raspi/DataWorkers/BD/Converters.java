@@ -5,6 +5,7 @@ import androidx.room.TypeConverter;
 import com.AS.Yuppi.Raspi.DataWorkers.Day_Schedule;
 import com.AS.Yuppi.Raspi.DataWorkers.Schedules;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
@@ -15,19 +16,54 @@ import java.util.Map;
 
 public class Converters {
 
-    private static final Gson gson = new Gson();
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(java.time.LocalDate.class, new LocalDateAdapter())
+            .create();
+    
+    // Адаптер для сериализации/десериализации LocalDate в Gson
+    private static class LocalDateAdapter extends com.google.gson.TypeAdapter<java.time.LocalDate> {
+        @Override
+        public void write(com.google.gson.stream.JsonWriter out, java.time.LocalDate value) throws java.io.IOException {
+            if (value == null) {
+                out.nullValue();
+            } else {
+                out.value(value.toString());
+            }
+        }
+
+        @Override
+        public java.time.LocalDate read(com.google.gson.stream.JsonReader in) throws java.io.IOException {
+            if (in.peek() == com.google.gson.stream.JsonToken.NULL) {
+                in.nextNull();
+                return null;
+            }
+            String dateStr = in.nextString();
+            return java.time.LocalDate.parse(dateStr);
+        }
+    }
 
     // --- Преобразование для LocalDate ---
 
     @TypeConverter
     public static LocalDate fromTimestamp(String value) {
         // LocalDate введен в API 26, поэтому этот конвертер безопасен для API 26+
-        return value == null ? null : LocalDate.parse(value);
+        if (value == null || value.isEmpty() || value.equals("null")) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(value);
+        } catch (Exception e) {
+            // Если не удалось распарсить, возвращаем null вместо дефолтной даты
+            return null;
+        }
     }
 
     @TypeConverter
     public static String dateToTimestamp(LocalDate date) {
-        return date == null ? null : date.toString();
+        if (date == null) {
+            return null;
+        }
+        return date.toString();
     }
 
     // --- Преобразование для List<Integer> ---

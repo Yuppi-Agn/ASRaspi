@@ -13,9 +13,14 @@ public class UserController {
     private final List<UserEvents> userEvents = new ArrayList<>();
     private final List<UserTask> userTasks = new ArrayList<>();
     private final com.AS.Yuppi.Raspi.DataWorkers.BD.ScheduleRepository repository;
+    private SchedulelController schedulelController; // Для уведомлений
 
     public UserController(com.AS.Yuppi.Raspi.DataWorkers.BD.ScheduleRepository repository) {
         this.repository = repository;
+    }
+    
+    public void setSchedulelController(SchedulelController schedulelController) {
+        this.schedulelController = schedulelController;
     }
 
     public List<UserEvents> getUserEvents() {
@@ -238,6 +243,10 @@ public class UserController {
             entity.setId(task.getId());
         }
         repository.insertUserTask(entity);
+        // Уведомляем об изменении
+        if (schedulelController != null) {
+            schedulelController.notifyAction("UserTaskUpdated");
+        }
     }
 
     public void toggleTaskDone(int id) {
@@ -245,6 +254,10 @@ public class UserController {
                 repository.getUserTaskByIdSync(id);
         if (t != null) {
             repository.setUserTaskDone(id, !t.isDone());
+            // Уведомляем об изменении
+            if (schedulelController != null) {
+                schedulelController.notifyAction("UserTaskUpdated");
+            }
         }
     }
 

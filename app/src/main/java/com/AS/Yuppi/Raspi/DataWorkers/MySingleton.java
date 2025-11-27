@@ -37,12 +37,15 @@ public class MySingleton {
 
             // 3. Создание SchedulelController с передачей репозитория
             instance.schedulelController = new SchedulelController(instance.scheduleRepository);
+            instance.schedulelController.setContext(application);
 
             // 4. При старте приложения пытаемся загрузить последнее активное расписание
             instance.schedulelController.loadLastUsedScheduleOnStartup();
 
             // 5. Создаем UserController для пользовательских событий/задач
             instance.userController = new UserController(instance.scheduleRepository);
+            // Устанавливаем ссылку на SchedulelController для уведомлений
+            instance.userController.setSchedulelController(instance.schedulelController);
         }
         return instance;
     }

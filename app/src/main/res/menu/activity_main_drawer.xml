@@ -21,11 +21,11 @@
             android:icon="@drawable/assignment_24"
             android:title="@string/menu_ScheduleRedactor"
             />
-        <item
-            android:id="@+id/nav_schedule_redactor2"
-            android:icon="@drawable/assignment_24"
-            android:title="Старый редактор"
-            />
+<!--        <item-->
+<!--            android:id="@+id/nav_schedule_redactor2"-->
+<!--            android:icon="@drawable/assignment_24"-->
+<!--            android:title="Старый редактор"-->
+<!--            />-->
 
         <item
             android:id="@+id/nav_hometaskRedactor"

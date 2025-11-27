@@ -41,6 +41,8 @@ public class AddHometaskFragment extends Fragment {
     private UserController userController;
     private String mode = "study"; // "study" или "personal"
     private int taskId = -1; // для study: индекс, для personal: id в БД
+    private String scheduleName; // Имя расписания для задания
+    private String scheduleAuthor; // Автор расписания для задания
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -61,6 +63,8 @@ public class AddHometaskFragment extends Fragment {
         if (getArguments() != null) {
             mode = getArguments().getString("mode", "study");
             taskId = getArguments().getInt("taskId", -1);
+            scheduleName = getArguments().getString("scheduleName");
+            scheduleAuthor = getArguments().getString("scheduleAuthor");
         }
 
         setupSubjectSpinner();
@@ -247,6 +251,10 @@ public class AddHometaskFragment extends Fragment {
                 Toast.makeText(requireContext(), "Неверный формат даты. Используйте дд.мм.гггг", Toast.LENGTH_SHORT).show();
                 return;
             }
+        } else if ("personal".equals(mode)) {
+            // Для личных заданий дата обязательна
+            Toast.makeText(requireContext(), "Выберите дату выполнения задания", Toast.LENGTH_SHORT).show();
+            return;
         }
 
         if ("study".equals(mode)) {
@@ -266,11 +274,44 @@ public class AddHometaskFragment extends Fragment {
                 return;
             }
 
-            Schedules current = schedulelController.getCurrentSchedule();
+            // Получаем расписание из аргументов или текущее
+            Schedules current = null;
+            if (scheduleName != null && scheduleAuthor != null) {
+                String authorNameString = scheduleAuthor + "-" + scheduleName;
+                schedulelController.loadCurrentSchedule(authorNameString);
+                current = schedulelController.getCurrentSchedule();
+            }
+            
+            if (current == null) {
+                current = schedulelController.getCurrentSchedule();
+            }
+            
+            if (current == null) {
+                // Пытаемся получить первое выбранное расписание
+                List<Schedules> selected = schedulelController.getSelectedSchedulesObjects();
+                if (!selected.isEmpty()) {
+                    current = selected.get(0);
+                    schedulelController.setCurrentSchedule(current);
+                }
+            }
+            
             if (current == null) {
                 Toast.makeText(requireContext(), "Расписание не загружено", Toast.LENGTH_SHORT).show();
                 NavHostFragment.findNavController(this).navigateUp();
                 return;
+            }
+            
+            // Загружаем расписание из БД, чтобы получить актуальную версию
+            String currentScheduleName = current.getName();
+            if (currentScheduleName != null && !currentScheduleName.isEmpty()) {
+                String authorNameString = current.getAuthor() + "-" + currentScheduleName;
+                schedulelController.loadCurrentSchedule(authorNameString);
+                current = schedulelController.getCurrentSchedule();
+                if (current == null) {
+                    Toast.makeText(requireContext(), "Ошибка загрузки расписания", Toast.LENGTH_SHORT).show();
+                    NavHostFragment.findNavController(this).navigateUp();
+                    return;
+                }
             }
             
             if (taskId >= 0 && taskId < current.getHometasks().size()) {
@@ -285,8 +326,13 @@ public class AddHometaskFragment extends Fragment {
                 ht.setPersonal(false);
             }
             
+            // Сохраняем изменения в БД
             schedulelController.seteditableSchedule(current);
-            schedulelController.saveEditableSchedule();
+            schedulelController.saveEditableScheduleToDB();
+            
+            // Обновляем текущее расписание в контроллере (уже содержит актуальные данные)
+            schedulelController.setCurrentSchedule(current);
+            
             Toast.makeText(requireContext(), "Задание сохранено", Toast.LENGTH_SHORT).show();
         } else {
             // Личное задание
@@ -296,11 +342,32 @@ public class AddHometaskFragment extends Fragment {
                 Toast.makeText(requireContext(), "Введите название задания", Toast.LENGTH_SHORT).show();
                 return;
             }
+            
+            // Проверяем, что дата была введена
+            if (endpoint == null) {
+                Toast.makeText(requireContext(), "Выберите дату выполнения задания", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
+            // Убеждаемся, что дата правильно установлена перед созданием UserTask
+            if (endpoint == null) {
+                Toast.makeText(requireContext(), "Ошибка: дата не установлена", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
             UserTask t = new UserTask(endpoint, name, description);
             if (taskId > 0) {
                 t.setId(taskId);
             }
+            // Дополнительно убеждаемся, что дата правильно установлена
+            t.setEndpoint(endpoint);
+            
+            // Проверяем, что дата действительно установлена
+            if (t.getEndpoint() == null) {
+                Toast.makeText(requireContext(), "Ошибка: не удалось установить дату", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
             userController.saveOrUpdateTask(t);
             Toast.makeText(requireContext(), "Задание сохранено", Toast.LENGTH_SHORT).show();
         }

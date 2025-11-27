@@ -18,7 +18,9 @@ class ScheduleLesson {
     enum LessonType {
         LECTURE("ЛЕК"),
         LAB("ЛАБ"),
-        SEMINAR("СЕМ");
+        SEMINAR("СЕМ"),
+        PERSONAL("ЛИЧ"),
+        TASK("ДЗ");
 
         private final String shortName;
         LessonType(String shortName) {
@@ -33,6 +35,10 @@ class ScheduleLesson {
     String headerText;
     LessonType type;
     String number, time, subjectName, teacherName, classroom;
+    // Задания для этого предмета (если крайний срок совпадает с днем показа)
+    List<HometaskInfo> hometasks;
+    // Личное мероприятие (если это личное мероприятие)
+    PersonalEventInfo personalEvent;
 
     // Constructor for header
     public ScheduleLesson(String headerText) {
@@ -49,6 +55,49 @@ class ScheduleLesson {
         this.subjectName = subjectName;
         this.teacherName = teacherName;
         this.classroom = classroom;
+        this.hometasks = new java.util.ArrayList<>();
+        this.personalEvent = null;
+    }
+
+    // Constructor for personal event
+    public ScheduleLesson(String time, String eventName, String eventInfo) {
+        this.isHeader = false;
+        this.type = LessonType.PERSONAL;
+        this.number = "";
+        this.time = time;
+        this.subjectName = eventName;
+        this.teacherName = "";
+        this.classroom = "";
+        this.hometasks = new java.util.ArrayList<>();
+        this.personalEvent = new PersonalEventInfo(eventName, eventInfo);
+    }
+
+    /**
+     * Информация о задании для отображения в ячейке предмета.
+     */
+    public static class HometaskInfo {
+        public String task;
+        public boolean isDone;
+        public String subject; // Предмет, к которому относится задание
+
+        public HometaskInfo(String task, boolean isDone, String subject) {
+            this.task = task;
+            this.isDone = isDone;
+            this.subject = subject;
+        }
+    }
+
+    /**
+     * Информация о личном мероприятии.
+     */
+    public static class PersonalEventInfo {
+        public String name;
+        public String info;
+
+        public PersonalEventInfo(String name, String info) {
+            this.name = name;
+            this.info = info;
+        }
     }
 }
 
@@ -98,12 +147,51 @@ public class HomeScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
             lessonHolder.setClassTypeColor(lesson.type);
 
             // Заполняем остальные поля
-            lessonHolder.tvClassNumber.setText(lesson.number);
+            if (lesson.number != null && !lesson.number.isEmpty()) {
+                lessonHolder.tvClassNumber.setText(lesson.number);
+                lessonHolder.tvClassNumber.setVisibility(View.VISIBLE);
+            } else {
+                lessonHolder.tvClassNumber.setVisibility(View.GONE);
+            }
             lessonHolder.tvClassTime.setText(lesson.time);
             lessonHolder.tvSubjectName.setText(lesson.subjectName);
-            lessonHolder.tvTeacherName.setText(lesson.teacherName);
-            lessonHolder.tvClassroom.setText(lesson.classroom);
-            lessonHolder.tvClassDetail.setVisibility(View.GONE);
+            
+            // Для личных мероприятий и заданий не показываем преподавателя и аудиторию
+            if (lesson.type == ScheduleLesson.LessonType.PERSONAL || lesson.type == ScheduleLesson.LessonType.TASK) {
+                lessonHolder.tvTeacherName.setVisibility(View.GONE);
+                lessonHolder.tvClassroom.setVisibility(View.GONE);
+                // Для заданий также скрываем время
+                if (lesson.type == ScheduleLesson.LessonType.TASK) {
+                    lessonHolder.tvClassTime.setVisibility(View.GONE);
+                } else {
+                    lessonHolder.tvClassTime.setVisibility(View.VISIBLE);
+                }
+            } else {
+                lessonHolder.tvTeacherName.setText(lesson.teacherName);
+                lessonHolder.tvClassroom.setText(lesson.classroom);
+                lessonHolder.tvTeacherName.setVisibility(View.VISIBLE);
+                lessonHolder.tvClassroom.setVisibility(View.VISIBLE);
+            }
+            
+            // Отображаем задания под названием предмета
+            if (lesson.hometasks != null && !lesson.hometasks.isEmpty()) {
+                StringBuilder tasksText = new StringBuilder();
+                for (ScheduleLesson.HometaskInfo task : lesson.hometasks) {
+                    if (tasksText.length() > 0) {
+                        tasksText.append("\n");
+                    }
+                    String status = task.isDone ? "✓" : "○";
+                    tasksText.append(status).append(" ").append(task.task);
+                }
+                lessonHolder.tvClassDetail.setText(tasksText.toString());
+                lessonHolder.tvClassDetail.setVisibility(View.VISIBLE);
+            } else if (lesson.personalEvent != null && lesson.personalEvent.info != null && !lesson.personalEvent.info.isEmpty()) {
+                // Для личных мероприятий показываем описание
+                lessonHolder.tvClassDetail.setText(lesson.personalEvent.info);
+                lessonHolder.tvClassDetail.setVisibility(View.VISIBLE);
+            } else {
+                lessonHolder.tvClassDetail.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -166,6 +254,14 @@ public class HomeScheduleAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                 case SEMINAR:
                     // Зеленый
                     colorRes = R.color.lesson_type_seminar;
+                    break;
+                case PERSONAL:
+                    // Фиолетовый для личных мероприятий
+                    colorRes = R.color.lesson_type_personal;
+                    break;
+                case TASK:
+                    // Фиолетовый для заданий (как у PERSONAL)
+                    colorRes = R.color.lesson_type_personal;
                     break;
                 default:
                     // Цвет по умолчанию, если что-то пойдет не так

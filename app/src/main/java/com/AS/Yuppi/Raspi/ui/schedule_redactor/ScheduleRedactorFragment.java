@@ -2,6 +2,8 @@ package com.AS.Yuppi.Raspi.ui.schedule_redactor;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -51,6 +53,7 @@ class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.EditorViewHolder>
 
     // Теперь список можно будет менять извне
     private List<EditorItem> items;
+    private boolean isEventsMode = false;
 
     interface OnEditorItemActionListener {
         void onItemSelected(int position, EditorItem item);
@@ -62,6 +65,10 @@ class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.EditorViewHolder>
 
     public EditorAdapter(List<EditorItem> items) {
         this.items = items;
+    }
+    
+    public void setEventsMode(boolean isEventsMode) {
+        this.isEventsMode = isEventsMode;
     }
 
     public void setOnEditorItemActionListener(OnEditorItemActionListener listener) {
@@ -97,20 +104,42 @@ class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.EditorViewHolder>
             holder.tvItemDetails.setVisibility(View.GONE);
         }
 
-        if (currentItem.isSelected) {
-            holder.ivSelectionIndicator.setImageResource(R.drawable.radio_button_checked_24);
+        // Для расписаний используем чекбоксы (множественный выбор), для мероприятий - переключатель
+        if (!isEventsMode) {
+            // Режим расписаний: чекбоксы для множественного выбора
+            // Используем стандартные иконки Material Design
+            if (currentItem.isSelected) {
+                holder.ivSelectionIndicator.setImageResource(android.R.drawable.checkbox_on_background);
+            } else {
+                holder.ivSelectionIndicator.setImageResource(android.R.drawable.checkbox_off_background);
+            }
         } else {
-            holder.ivSelectionIndicator.setImageResource(R.drawable.radio_button_unchecked_24);
+            // Режим мероприятий: переключатель включено/выключено
+            if (currentItem.isSelected) {
+                holder.ivSelectionIndicator.setImageResource(R.drawable.radio_button_checked_24);
+            } else {
+                holder.ivSelectionIndicator.setImageResource(R.drawable.radio_button_unchecked_24);
+            }
         }
 
         holder.ivSelectionIndicator.setOnClickListener(v -> {
-            for(EditorItem item : items) {
-                item.isSelected = false;
-            }
-            currentItem.isSelected = true;
-            notifyDataSetChanged();
-            if (actionListener != null) {
-                actionListener.onItemSelected(holder.getBindingAdapterPosition(), currentItem);
+            if (!isEventsMode) {
+                // Для расписаний: переключаем чекбокс (множественный выбор)
+                currentItem.isSelected = !currentItem.isSelected;
+                notifyDataSetChanged();
+                if (actionListener != null) {
+                    actionListener.onItemSelected(holder.getBindingAdapterPosition(), currentItem);
+                }
+            } else {
+                // Для мероприятий: переключаем включенность (одиночный выбор)
+                for(EditorItem item : items) {
+                    item.isSelected = false;
+                }
+                currentItem.isSelected = true;
+                notifyDataSetChanged();
+                if (actionListener != null) {
+                    actionListener.onItemSelected(holder.getBindingAdapterPosition(), currentItem);
+                }
             }
         });
 
@@ -198,8 +227,58 @@ public class ScheduleRedactorFragment extends Fragment {
         setupRecyclerView();
         // 3. Настраиваем клики по табам для смены данных
         setupTabClickListeners();
+        // 4. Настраиваем поиск
+        setupSearch();
 
         setupBottomButtons();
+    }
+    
+    private void setupSearch() {
+        binding.etSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterItems(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+    }
+    
+    private void filterItems(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            // Показываем все элементы
+            if (isEventsMode) {
+                editorAdapter.updateData(new ArrayList<>(eventItems));
+            } else {
+                editorAdapter.updateData(new ArrayList<>(scheduleItems));
+            }
+            return;
+        }
+        
+        String lowerQuery = query.toLowerCase().trim();
+        List<EditorItem> filtered = new ArrayList<>();
+        
+        if (isEventsMode) {
+            for (EditorItem item : eventItems) {
+                if (item.title != null && item.title.toLowerCase().contains(lowerQuery) ||
+                    item.details != null && item.details.toLowerCase().contains(lowerQuery)) {
+                    filtered.add(item);
+                }
+            }
+        } else {
+            for (EditorItem item : scheduleItems) {
+                if (item.title != null && item.title.toLowerCase().contains(lowerQuery) ||
+                    item.details != null && item.details.toLowerCase().contains(lowerQuery)) {
+                    filtered.add(item);
+                }
+            }
+        }
+        
+        editorAdapter.updateData(filtered);
     }
 
     /**
@@ -227,7 +306,9 @@ public class ScheduleRedactorFragment extends Fragment {
         List<UserEvents> events = userController.getAllEvents();
         for (UserEvents event : events) {
             String title = event.getName();
-            String details = event.getDate() + " " + String.format("%02d:%02d", event.getTime() / 60, event.getTime() % 60);
+            String dateStr = event.getDate() != null ? 
+                event.getDate().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy")) : "";
+            String details = dateStr + " " + String.format("%02d:%02d", event.getTime() / 60, event.getTime() % 60);
             if (event.getInfo() != null && !event.getInfo().isEmpty()) {
                 details += " — " + event.getInfo();
             }
@@ -237,9 +318,16 @@ public class ScheduleRedactorFragment extends Fragment {
             eventItems.add(item);
         }
 
-        // Устанавливаем одному элементу в начальном списке статус "выбран"
-        if (!scheduleItems.isEmpty()) {
+        // Устанавливаем статус "выбран" на основе сохраненных выбранных расписаний
+        List<String> selectedSchedules = schedulelController.getSelectedSchedules();
+        for (EditorItem item : scheduleItems) {
+            item.isSelected = selectedSchedules.contains(item.meta);
+        }
+        
+        // Если нет выбранных расписаний, выбираем первое (для обратной совместимости)
+        if (selectedSchedules.isEmpty() && !scheduleItems.isEmpty()) {
             scheduleItems.get(0).isSelected = true;
+            schedulelController.addSelectedSchedule(scheduleItems.get(0).meta);
         }
     }
 
@@ -249,13 +337,21 @@ public class ScheduleRedactorFragment extends Fragment {
 
         // Создаем адаптер с начальными данными (списком расписаний)
         editorAdapter = new EditorAdapter(new ArrayList<>(scheduleItems));
+        editorAdapter.setEventsMode(false);
         editorAdapter.setOnEditorItemActionListener(new EditorAdapter.OnEditorItemActionListener() {
             @Override
             public void onItemSelected(int position, EditorItem item) {
                 if (!isEventsMode) {
+                    // Для расписаний: сохраняем множественный выбор
                     if (item.meta != null) {
-                        schedulelController.loadCurrentSchedule(item.meta);
-                        Toast.makeText(requireContext(), "Текущее расписание: " + item.title, Toast.LENGTH_SHORT).show();
+                        if (item.isSelected) {
+                            schedulelController.addSelectedSchedule(item.meta);
+                            // Загружаем как текущее только при установке выбора
+                            schedulelController.loadCurrentSchedule(item.meta);
+                        } else {
+                            schedulelController.removeSelectedSchedule(item.meta);
+                            // При снятии выбора не загружаем расписание
+                        }
                     }
                 } else {
                     // Переключаем включенность события
@@ -330,6 +426,7 @@ public class ScheduleRedactorFragment extends Fragment {
             binding.etSearch.setHint("Поиск по расписаниям");
 
             // --- Обновляем данные в адаптере на список РАСПИСАНИЙ ---
+            editorAdapter.setEventsMode(false);
             editorAdapter.updateData(scheduleItems);
         });
 
@@ -345,6 +442,7 @@ public class ScheduleRedactorFragment extends Fragment {
 
             // --- Обновляем данные в адаптере на список МЕРОПРИЯТИЙ ---
             prepareDataLists();
+            editorAdapter.setEventsMode(true);
             editorAdapter.updateData(eventItems);
         });
     }

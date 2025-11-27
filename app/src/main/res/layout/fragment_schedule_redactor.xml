@@ -102,17 +102,6 @@
         app:layout_constraintTop_toBottomOf="@id/tabs_container"
         android:inputType="text"/>
 
-    <ImageButton
-        android:id="@+id/btn_search"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginEnd="16dp"
-        android:src="@drawable/search_24"
-        android:background="@drawable/search_button_background"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/et_search"
-        app:layout_constraintBottom_toBottomOf="@id/et_search"/>
-
     <TextView
         android:id="@+id/tv_search_hint"
         android:layout_width="0dp"

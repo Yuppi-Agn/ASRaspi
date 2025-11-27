@@ -4,6 +4,9 @@ import com.AS.Yuppi.Raspi.DataWorkers.Day_Schedule;
 import com.AS.Yuppi.Raspi.DataWorkers.MySingleton;
 import com.AS.Yuppi.Raspi.DataWorkers.SchedulelController;
 import com.AS.Yuppi.Raspi.DataWorkers.Schedules;
+import com.AS.Yuppi.Raspi.DataWorkers.UserController;
+import com.AS.Yuppi.Raspi.DataWorkers.UserEvents;
+import com.AS.Yuppi.Raspi.DataWorkers.UserTask;
 import com.AS.Yuppi.Raspi.R;
 
 import android.content.Context;
@@ -43,6 +46,7 @@ public class HomeFragment extends Fragment {
     private FragmentHomeBinding binding;
 
     private SchedulelController schedulelController;
+    private UserController userController;
     private HomeScheduleAdapter scheduleAdapter;
     private WeekDayAdapter weekDayAdapter;
     private int currentDayOffset = 0;
@@ -54,8 +58,9 @@ public class HomeFragment extends Fragment {
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        schedulelController = MySingleton.getInstance(context.getApplicationContext())
-                .getSchedulelController();
+        MySingleton singleton = MySingleton.getInstance(context.getApplicationContext());
+        schedulelController = singleton.getSchedulelController();
+        userController = singleton.getUserController();
     }
 
     @Nullable
@@ -83,7 +88,10 @@ public class HomeFragment extends Fragment {
             // Проверяем, что View все еще активно (состояние RESUMED, STARTED и т.д.)
             if (viewLifecycleOwner.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
                 // Теперь вызов updateScheduleData абсолютно безопасен
-                updateScheduleData();
+                if ("HometaskUpdated".equals(data) || "ScheduleSaved".equals(data) || "CurrentScheduleLoaded".equals(data) || 
+                    "SelectedSchedulesUpdated".equals(data) || "UserTaskUpdated".equals(data)) {
+                    updateScheduleData();
+                }
             }
         });
 
@@ -183,30 +191,124 @@ public class HomeFragment extends Fragment {
         updateDateHeader();
         updateTodayHeader();
 
-        Schedules currentSchedule = schedulelController.getCurrentSchedule();
-        if (currentSchedule == null) {
-            Log.w("HomeFragment", "Текущее расписание не загружено.");
-            scheduleAdapter.updateLessons(new ArrayList<>()); // Очищаем список
+        // Получаем все выбранные расписания
+        List<Schedules> selectedSchedules = schedulelController.getSelectedSchedulesObjects();
+
+        if (selectedSchedules.isEmpty()) {
+            Log.w("HomeFragment", "Нет выбранных расписаний.");
+            scheduleAdapter.updateLessons(new ArrayList<>());
+            if (weekDayAdapter != null && binding != null) {
+                weekDayAdapter.updateWeekDays(new ArrayList<>());
+            }
             return;
         }
 
         if (isWeekViewMode) {
             // Week view: show horizontal scrolling week schedule
-            setupWeekView(currentSchedule);
+            setupWeekView(selectedSchedules);
         } else {
-            // Day view: show single day schedule
-            Day_Schedule daySchedule = currentSchedule.getScheduleForDayOffset(currentDayOffset);
-            if (daySchedule == null) {
-                Log.w("HomeFragment", "Расписание на день со смещением " + currentDayOffset + " не найдено.");
-                scheduleAdapter.updateLessons(new ArrayList<>()); // Очищаем список
-                return;
+            // Day view: объединяем данные из всех выбранных расписаний
+            List<ScheduleLesson> allLessons = new ArrayList<>();
+            
+            // Объединяем уроки из всех выбранных расписаний
+            for (Schedules schedule : selectedSchedules) {
+                Day_Schedule daySchedule = schedule.getScheduleForDayOffset(currentDayOffset);
+                if (daySchedule != null) {
+                    List<ScheduleLesson> lessons = parseDaySchedule(daySchedule, schedule);
+                    allLessons.addAll(lessons);
+                }
             }
-
-            // ИСПОЛЬЗУЕМ НОВЫЙ МЕТОД-ПАРСЕР
-            List<ScheduleLesson> lessons = parseDaySchedule(daySchedule, currentSchedule);
+            
+            // Добавляем личные мероприятия (UserEvents)
+            List<UserEvents> personalEvents = userController.getEventsForDayOffset(currentDayOffset);
+            for (UserEvents event : personalEvents) {
+                if (event.isEnable()) {
+                    String timeStr = String.format("%02d:%02d", event.getTime() / 60, event.getTime() % 60);
+                    ScheduleLesson personalLesson = new ScheduleLesson(timeStr, event.getName(), event.getInfo());
+                    allLessons.add(personalLesson);
+                }
+            }
+            
+            // Добавляем задания к соответствующим предметам
+            LocalDate targetDate = LocalDate.now().plusDays(currentDayOffset);
+            for (Schedules schedule : selectedSchedules) {
+                List<Schedules.Hometask> hometasks = schedule.getHometasks();
+                if (hometasks == null) continue;
+                for (Schedules.Hometask hometask : hometasks) {
+                    if (hometask == null) continue;
+                    if (hometask.getEndpoint() != null && hometask.getEndpoint().equals(targetDate) && !hometask.isPersonal()) {
+                        // Находим соответствующий урок по предмету
+                        String subject = hometask.getLesson();
+                        if (subject == null || subject.isEmpty()) continue;
+                        boolean found = false;
+                        for (ScheduleLesson lesson : allLessons) {
+                            if (!lesson.isHeader && lesson.subjectName != null) {
+                                // Сравниваем названия предметов (учитываем возможные различия в пробелах и регистре)
+                                String lessonSubject = lesson.subjectName.trim();
+                                String hometaskSubject = subject.trim();
+                                if (lessonSubject.equalsIgnoreCase(hometaskSubject) || 
+                                    lessonSubject.contains(hometaskSubject) || 
+                                    hometaskSubject.contains(lessonSubject)) {
+                                    ScheduleLesson.HometaskInfo taskInfo = new ScheduleLesson.HometaskInfo(
+                                        hometask.getTask(), hometask.isDone(), subject);
+                                    if (lesson.hometasks == null) {
+                                        lesson.hometasks = new ArrayList<>();
+                                    }
+                                    lesson.hometasks.add(taskInfo);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+                        // Если урок не найден, создаем отдельный элемент для задания
+                        if (!found) {
+                            ScheduleLesson taskLesson = new ScheduleLesson(
+                                ScheduleLesson.LessonType.LECTURE, "", "", subject, "", "");
+                            ScheduleLesson.HometaskInfo taskInfo = new ScheduleLesson.HometaskInfo(
+                                hometask.getTask(), hometask.isDone(), subject);
+                            taskLesson.hometasks = new ArrayList<>();
+                            taskLesson.hometasks.add(taskInfo);
+                            allLessons.add(taskLesson);
+                        }
+                    }
+                }
+            }
+            
+            // Добавляем личные задания (UserTask) как отдельные элементы
+            List<UserTask> personalTasks = userController.getTasksForDayOffset(currentDayOffset);
+            for (UserTask task : personalTasks) {
+                if (task.getEndpoint() != null && task.getEndpoint().equals(targetDate)) {
+                    // Личные задания отображаем как "ДЗ" с фиолетовым цветом
+                    ScheduleLesson personalTaskLesson = new ScheduleLesson(
+                        ScheduleLesson.LessonType.TASK, "", "", task.getName(), "", "");
+                    // Добавляем задание с информацией о выполнении
+                    ScheduleLesson.HometaskInfo taskInfo = new ScheduleLesson.HometaskInfo(
+                        task.getTask() != null ? task.getTask() : "", task.isDone(), task.getName());
+                    personalTaskLesson.hometasks = new ArrayList<>();
+                    personalTaskLesson.hometasks.add(taskInfo);
+                    allLessons.add(personalTaskLesson);
+                }
+            }
+            
+            // Сортируем по времени начала
+            allLessons.sort((l1, l2) -> {
+                if (l1.isHeader || l2.isHeader) return 0;
+                // Извлекаем время начала из строки времени
+                try {
+                    String time1 = l1.time.split("\n")[0];
+                    String time2 = l2.time.split("\n")[0];
+                    String[] parts1 = time1.split(":");
+                    String[] parts2 = time2.split(":");
+                    int minutes1 = Integer.parseInt(parts1[0]) * 60 + Integer.parseInt(parts1[1]);
+                    int minutes2 = Integer.parseInt(parts2[0]) * 60 + Integer.parseInt(parts2[1]);
+                    return Integer.compare(minutes1, minutes2);
+                } catch (Exception e) {
+                    return 0;
+                }
+            });
 
             // Обновляем RecyclerView
-            scheduleAdapter.updateLessons(lessons);
+            scheduleAdapter.updateLessons(allLessons);
         }
     }
 
@@ -231,7 +333,7 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private void setupWeekView(Schedules currentSchedule) {
+    private void setupWeekView(List<Schedules> selectedSchedules) {
         // Week view: create a list of day cards
         List<WeekDayAdapter.WeekDayData> weekDays = new ArrayList<>();
         LocalDate weekStart = LocalDate.now().plusWeeks(currentWeekOffset).with(java.time.DayOfWeek.MONDAY);
@@ -239,13 +341,86 @@ public class HomeFragment extends Fragment {
         for (int i = 0; i < 7; i++) {
             LocalDate dayDate = weekStart.plusDays(i);
             int dayOffset = (int) java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), dayDate);
-            Day_Schedule daySchedule = currentSchedule.getScheduleForDayOffset(dayOffset);
             
-            // Get lessons for this day
+            // Объединяем уроки из всех выбранных расписаний
             List<ScheduleLesson> dayLessons = new ArrayList<>();
-            if (daySchedule != null) {
-                dayLessons = parseDaySchedule(daySchedule, currentSchedule);
+            for (Schedules schedule : selectedSchedules) {
+                Day_Schedule daySchedule = schedule.getScheduleForDayOffset(dayOffset);
+                if (daySchedule != null) {
+                    List<ScheduleLesson> lessons = parseDaySchedule(daySchedule, schedule);
+                    dayLessons.addAll(lessons);
+                }
             }
+            
+            // Добавляем личные мероприятия
+            List<UserEvents> personalEvents = userController.getEventsForDayOffset(dayOffset);
+            for (UserEvents event : personalEvents) {
+                if (event.isEnable()) {
+                    String timeStr = String.format("%02d:%02d", event.getTime() / 60, event.getTime() % 60);
+                    ScheduleLesson personalLesson = new ScheduleLesson(timeStr, event.getName(), event.getInfo());
+                    dayLessons.add(personalLesson);
+                }
+            }
+            
+            // Добавляем задания к соответствующим предметам
+            for (Schedules schedule : selectedSchedules) {
+                if (schedule == null) continue;
+                List<Schedules.Hometask> hometasks = schedule.getHometasks();
+                if (hometasks == null) continue;
+                for (Schedules.Hometask hometask : hometasks) {
+                    if (hometask == null) continue;
+                    if (hometask.getEndpoint() != null && hometask.getEndpoint().equals(dayDate) && !hometask.isPersonal()) {
+                        String subject = hometask.getLesson();
+                        if (subject == null || subject.isEmpty()) continue;
+                        boolean found = false;
+                        for (ScheduleLesson lesson : dayLessons) {
+                            if (!lesson.isHeader && lesson.subjectName != null) {
+                                // Сравниваем названия предметов (учитываем возможные различия в пробелах и регистре)
+                                String lessonSubject = lesson.subjectName.trim();
+                                String hometaskSubject = subject.trim();
+                                if (lessonSubject.equalsIgnoreCase(hometaskSubject) || 
+                                    lessonSubject.contains(hometaskSubject) || 
+                                    hometaskSubject.contains(lessonSubject)) {
+                                    ScheduleLesson.HometaskInfo taskInfo = new ScheduleLesson.HometaskInfo(
+                                        hometask.getTask(), hometask.isDone(), subject);
+                                    if (lesson.hometasks == null) {
+                                        lesson.hometasks = new ArrayList<>();
+                                    }
+                                    lesson.hometasks.add(taskInfo);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+                        // Если урок не найден, создаем отдельный элемент для задания
+                        if (!found) {
+                            ScheduleLesson taskLesson = new ScheduleLesson(
+                                ScheduleLesson.LessonType.LECTURE, "", "", subject, "", "");
+                            ScheduleLesson.HometaskInfo taskInfo = new ScheduleLesson.HometaskInfo(
+                                hometask.getTask(), hometask.isDone(), subject);
+                            taskLesson.hometasks = new ArrayList<>();
+                            taskLesson.hometasks.add(taskInfo);
+                            dayLessons.add(taskLesson);
+                        }
+                    }
+                }
+            }
+            
+            // Сортируем по времени
+            dayLessons.sort((l1, l2) -> {
+                if (l1.isHeader || l2.isHeader) return 0;
+                try {
+                    String time1 = l1.time.split("\n")[0];
+                    String time2 = l2.time.split("\n")[0];
+                    String[] parts1 = time1.split(":");
+                    String[] parts2 = time2.split(":");
+                    int minutes1 = Integer.parseInt(parts1[0]) * 60 + Integer.parseInt(parts1[1]);
+                    int minutes2 = Integer.parseInt(parts2[0]) * 60 + Integer.parseInt(parts2[1]);
+                    return Integer.compare(minutes1, minutes2);
+                } catch (Exception e) {
+                    return 0;
+                }
+            });
             
             weekDays.add(new WeekDayAdapter.WeekDayData(dayDate, dayLessons));
         }

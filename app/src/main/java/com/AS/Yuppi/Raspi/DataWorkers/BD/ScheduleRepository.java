@@ -55,6 +55,17 @@ public class ScheduleRepository {
             schedulesDao.insert(schedule);
         });
     }
+    
+    // Синхронная вставка для немедленного обновления
+    public void insertSync(final SchedulesEntity schedule) {
+        try {
+            databaseWriteExecutor.submit(() -> {
+                schedulesDao.insert(schedule);
+            }).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     // Удаление расписания
     public void delete(final SchedulesEntity schedule) {
