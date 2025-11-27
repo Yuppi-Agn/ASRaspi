@@ -210,11 +210,18 @@ public class AddLectureFragment extends Fragment {
             updateLabel();
         };
 
-        binding.etDate.setOnClickListener(v -> new DatePickerDialog(requireContext(), dateSetListener,
-                myCalendar.get(Calendar.YEAR),
-                myCalendar.get(Calendar.MONTH),
-                myCalendar.get(Calendar.DAY_OF_MONTH)
-        ).show());
+        binding.etDate.setOnClickListener(v -> {
+            // Обновляем календарь до текущей даты, если поле пустое или не установлено
+            String dateText = binding.etDate.getText().toString().trim();
+            if (dateText.isEmpty()) {
+                myCalendar.setTimeInMillis(System.currentTimeMillis());
+            }
+            new DatePickerDialog(requireContext(), dateSetListener,
+                    myCalendar.get(Calendar.YEAR),
+                    myCalendar.get(Calendar.MONTH),
+                    myCalendar.get(Calendar.DAY_OF_MONTH)
+            ).show();
+        });
         // Установим текущую дату при открытии
         updateLabel();
     }

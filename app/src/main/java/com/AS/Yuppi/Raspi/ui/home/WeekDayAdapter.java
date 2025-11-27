@@ -41,15 +41,47 @@ public class WeekDayAdapter extends RecyclerView.Adapter<WeekDayAdapter.DayViewH
     }
 
     private List<WeekDayData> weekDaysList;
+    private int[] cachedWidths; // Кэш для ширин карточек
+    private int currentWeekHash; // Хэш текущей недели для проверки необходимости пересчета
 
     public WeekDayAdapter(List<WeekDayData> weekDays) {
         this.weekDaysList = new ArrayList<>(weekDays);
+        this.cachedWidths = new int[weekDays.size()];
+        this.currentWeekHash = calculateWeekHash(weekDays);
     }
 
     public void updateWeekDays(List<WeekDayData> newWeekDays) {
+        int newWeekHash = calculateWeekHash(newWeekDays);
+        
+        // Если неделя изменилась, очищаем кэш и пересчитываем размеры
+        if (newWeekHash != currentWeekHash) {
+            this.cachedWidths = new int[newWeekDays.size()];
+            this.currentWeekHash = newWeekHash;
+        }
+        
         this.weekDaysList.clear();
         this.weekDaysList.addAll(newWeekDays);
+        
+        // Если размер массива изменился, пересоздаем кэш
+        if (cachedWidths.length != newWeekDays.size()) {
+            this.cachedWidths = new int[newWeekDays.size()];
+        }
+        
         notifyDataSetChanged();
+    }
+    
+    private int calculateWeekHash(List<WeekDayData> weekDays) {
+        // Создаем хэш на основе дат недели для определения, нужно ли пересчитывать размеры
+        if (weekDays == null || weekDays.isEmpty()) {
+            return 0;
+        }
+        int hash = 0;
+        for (WeekDayData day : weekDays) {
+            if (day != null && day.date != null) {
+                hash = 31 * hash + day.date.hashCode();
+            }
+        }
+        return hash;
     }
 
     @NonNull
@@ -63,20 +95,58 @@ public class WeekDayAdapter extends RecyclerView.Adapter<WeekDayAdapter.DayViewH
     public void onBindViewHolder(@NonNull DayViewHolder holder, int position) {
         WeekDayData dayData = weekDaysList.get(position);
         
+        // Сбрасываем LayoutParams перед установкой новых, чтобы избежать конфликтов при переиспользовании
+        ViewGroup.LayoutParams params = holder.itemView.getLayoutParams();
+        if (params == null) {
+            params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            holder.itemView.setLayoutParams(params);
+        } else {
+            // Сбрасываем и ширину, и высоту для правильного переиспользования
+            params.width = ViewGroup.LayoutParams.WRAP_CONTENT;
+            params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+            holder.itemView.setLayoutParams(params);
+        }
+        
+        // Сбрасываем LayoutParams для внутреннего RecyclerView, чтобы избежать проблем с высотой
+        ViewGroup.LayoutParams rvParams = holder.rvDayLessons.getLayoutParams();
+        if (rvParams != null) {
+            rvParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+            holder.rvDayLessons.setLayoutParams(rvParams);
+        }
+        
         // Устанавливаем заголовок дня
         String dateLabel = dayData.date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
         String relativeLabel = getRelativeDateString(dayData.date);
         holder.tvDayHeader.setText(dateLabel + "\n" + relativeLabel);
         
         // Настраиваем RecyclerView для занятий этого дня
+        // Важно: создаем новый LayoutManager для каждого ViewHolder, чтобы избежать проблем при переиспользовании
         holder.rvDayLessons.setLayoutManager(new LinearLayoutManager(holder.itemView.getContext()));
         WeekScheduleAdapter dayAdapter = new WeekScheduleAdapter(dayData.lessons);
         holder.rvDayLessons.setAdapter(dayAdapter);
         
-        // Измеряем и устанавливаем ширину карточки на основе реального контента
-        holder.rvDayLessons.post(() -> {
-            // Ждем, пока RecyclerView отрисует элементы
-            holder.rvDayLessons.post(() -> {
+        // Принудительно запрашиваем перерисовку RecyclerView для правильного измерения высоты
+        holder.rvDayLessons.requestLayout();
+        
+        // Используем кэшированную ширину, если она есть, иначе вычисляем
+        int cachedWidth = (position < cachedWidths.length) ? cachedWidths[position] : 0;
+        
+        if (cachedWidth > 0) {
+            // Используем кэшированную ширину
+            ViewGroup.LayoutParams Thisparams = holder.itemView.getLayoutParams();
+            if (Thisparams != null) {
+                Thisparams.width = cachedWidth;
+                Thisparams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                holder.itemView.setLayoutParams(Thisparams);
+            }
+        } else {
+            // Вычисляем ширину только если она не кэширована
+            holder.itemView.post(() -> {
+                // Проверяем, что ViewHolder все еще привязан к той же позиции
+                if (holder.getAdapterPosition() != position || position >= cachedWidths.length) {
+                    return;
+                }
+                
                 float density = holder.itemView.getContext().getResources().getDisplayMetrics().density;
                 int padding = (int) (16 * density); // padding карточки (8dp * 2)
                 int maxWidth = 0;
@@ -88,48 +158,36 @@ public class WeekDayAdapter extends RecyclerView.Adapter<WeekDayAdapter.DayViewH
                 );
                 maxWidth = Math.max(maxWidth, holder.tvDayHeader.getMeasuredWidth());
                 
-                // Измеряем ширину элементов занятий после их отрисовки
+                // Измеряем ширину элементов занятий
                 if (dayData.lessons != null && !dayData.lessons.isEmpty()) {
-                    // Проверяем, есть ли ViewHolder'ы в RecyclerView
-                    int childCount = holder.rvDayLessons.getChildCount();
-                    for (int i = 0; i < childCount; i++) {
-                        View child = holder.rvDayLessons.getChildAt(i);
-                        if (child != null) {
-                            maxWidth = Math.max(maxWidth, child.getMeasuredWidth());
-                        }
-                    }
+                    TextPaint textPaint = new TextPaint();
+                    textPaint.setTextSize(14 * density); // размер текста предмета
                     
-                    // Если элементы еще не отрисованы, используем приблизительный расчет
-                    if (maxWidth == 0 || childCount == 0) {
-                        TextPaint textPaint = new TextPaint();
-                        textPaint.setTextSize(14 * density); // размер текста предмета
+                    for (ScheduleLesson lesson : dayData.lessons) {
+                        int lessonWidth = 0;
                         
-                        for (ScheduleLesson lesson : dayData.lessons) {
-                            int lessonWidth = 0;
-                            
-                            // Левый блок: иконка (32dp) + номер (~20dp) + время (~50dp) + отступы (16dp)
-                            lessonWidth += (int) (118 * density);
-                            
-                            // Средний блок: название предмета (максимум 120dp по layout)
-                            if (lesson.subjectName != null) {
-                                float subjectWidth = textPaint.measureText(lesson.subjectName);
-                                lessonWidth += Math.min((int) subjectWidth, (int) (120 * density));
-                            } else {
-                                lessonWidth += (int) (120 * density);
-                            }
-                            lessonWidth += (int) (8 * density); // margin
-                            
-                            // Правый блок: преподаватель + аудитория (~60dp)
-                            if (lesson.teacherName != null) {
-                                textPaint.setTextSize(12 * density);
-                                float teacherWidth = textPaint.measureText(lesson.teacherName);
-                                lessonWidth += Math.max((int) teacherWidth, (int) (60 * density));
-                            } else {
-                                lessonWidth += (int) (60 * density);
-                            }
-                            
-                            maxWidth = Math.max(maxWidth, lessonWidth);
+                        // Левый блок: иконка (32dp) + номер (~20dp) + время (~50dp) + отступы (16dp)
+                        lessonWidth += (int) (118 * density);
+                        
+                        // Средний блок: название предмета (максимум 120dp по layout)
+                        if (lesson.subjectName != null) {
+                            float subjectWidth = textPaint.measureText(lesson.subjectName);
+                            lessonWidth += Math.min((int) subjectWidth, (int) (120 * density));
+                        } else {
+                            lessonWidth += (int) (120 * density);
                         }
+                        lessonWidth += (int) (8 * density); // margin
+                        
+                        // Правый блок: преподаватель + аудитория (~60dp)
+                        if (lesson.teacherName != null) {
+                            textPaint.setTextSize(12 * density);
+                            float teacherWidth = textPaint.measureText(lesson.teacherName);
+                            lessonWidth += Math.max((int) teacherWidth, (int) (60 * density));
+                        } else {
+                            lessonWidth += (int) (60 * density);
+                        }
+                        
+                        maxWidth = Math.max(maxWidth, lessonWidth);
                     }
                 }
                 
@@ -141,18 +199,49 @@ public class WeekDayAdapter extends RecyclerView.Adapter<WeekDayAdapter.DayViewH
                 int minWidthDp = (int) (180 * density);
                 finalWidth = Math.max(finalWidth, minWidthDp);
                 
-                ViewGroup.LayoutParams params = holder.itemView.getLayoutParams();
-                if (params != null) {
-                    params.width = finalWidth;
-                    holder.itemView.setLayoutParams(params);
+                // Кэшируем ширину
+                cachedWidths[position] = finalWidth;
+                
+                // Устанавливаем ширину, высота остается WRAP_CONTENT
+                ViewGroup.LayoutParams finalParams = holder.itemView.getLayoutParams();
+                if (finalParams != null) {
+                    finalParams.width = finalWidth;
+                    // Высота должна оставаться WRAP_CONTENT для правильного отображения
+                    finalParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                    holder.itemView.setLayoutParams(finalParams);
                 }
+                
+                // Принудительно запрашиваем перерисовку для правильного измерения высоты
+                holder.itemView.requestLayout();
             });
-        });
+        }
     }
 
     @Override
     public int getItemCount() {
         return weekDaysList.size();
+    }
+    
+    @Override
+    public void onViewRecycled(@NonNull DayViewHolder holder) {
+        super.onViewRecycled(holder);
+        // Сбрасываем LayoutParams при переиспользовании ViewHolder'а
+        ViewGroup.LayoutParams params = holder.itemView.getLayoutParams();
+        if (params != null) {
+            params.width = ViewGroup.LayoutParams.WRAP_CONTENT;
+            params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+            holder.itemView.setLayoutParams(params);
+        }
+        
+        // Сбрасываем LayoutParams для внутреннего RecyclerView
+        ViewGroup.LayoutParams rvParams = holder.rvDayLessons.getLayoutParams();
+        if (rvParams != null) {
+            rvParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+            holder.rvDayLessons.setLayoutParams(rvParams);
+        }
+        
+        // Очищаем адаптер внутреннего RecyclerView
+        holder.rvDayLessons.setAdapter(null);
     }
 
     static class DayViewHolder extends RecyclerView.ViewHolder {

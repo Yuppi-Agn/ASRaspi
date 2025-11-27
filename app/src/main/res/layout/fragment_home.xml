@@ -63,7 +63,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_add_event"
-                android:layout_width="0dp"
+                android:layout_width="20dp"
                 android:layout_height="76dp"
                 android:layout_weight="1"
                 style="@style/Widget.Material3.Button.TextButton.Icon"

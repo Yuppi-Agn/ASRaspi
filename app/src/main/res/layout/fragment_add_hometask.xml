@@ -54,7 +54,6 @@
                     android:clickable="true"
                     android:drawableEnd="@drawable/ic_calendar_month_24"
                     android:drawablePadding="8dp"
-                    android:text="26.09.2025"
                     />
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>

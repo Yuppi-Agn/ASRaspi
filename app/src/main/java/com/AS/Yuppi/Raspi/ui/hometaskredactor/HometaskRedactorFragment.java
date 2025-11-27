@@ -377,14 +377,33 @@ public class HometaskRedactorFragment extends Fragment {
                         if (updated != null) {
                             List<Schedules.Hometask> updatedList = updated.getHometasks();
                             if (updatedList != null) {
-                                for (Schedules.Hometask updatedHt : updatedList) {
-                                    if (updatedHt != null && updatedHt.getLesson() != null && 
-                                        updatedHt.getLesson().equals(item.title) && !updatedHt.isPersonal()) {
-                                        updatedHt.setDone(!updatedHt.isDone());
-                                        item.isCompleted = updatedHt.isDone();
+                                // Находим задание по индексу и дополнительно проверяем по комбинации полей для надежности
+                                int targetIndex = item.indexOrId;
+                                if (targetIndex >= 0 && targetIndex < updatedList.size()) {
+                                    // Сначала пробуем найти по индексу (если список не изменился)
+                                    Schedules.Hometask targetHt = null;
+                                    int foundIndex = -1;
+                                    
+                                    // Ищем задание, которое соответствует item по комбинации полей
+                                    for (int idx = 0; idx < updatedList.size(); idx++) {
+                                        Schedules.Hometask ht = updatedList.get(idx);
+                                        if (ht != null && !ht.isPersonal() &&
+                                            ht.getLesson() != null && ht.getLesson().equals(item.title) &&
+                                            ht.getTask() != null && ht.getTask().equals(item.description) &&
+                                            ((ht.getEndpoint() == null && item.endpointDate == null) ||
+                                             (ht.getEndpoint() != null && item.endpointDate != null && ht.getEndpoint().equals(item.endpointDate)))) {
+                                            targetHt = ht;
+                                            foundIndex = idx;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    if (targetHt != null) {
+                                        targetHt.setDone(!targetHt.isDone());
+                                        item.isCompleted = targetHt.isDone();
                                         schedulelController.seteditableSchedule(updated);
                                         schedulelController.saveEditableScheduleToDB();
-                                        Toast.makeText(getContext(), updatedHt.isDone() ? "Задание выполнено" : "Задание не выполнено", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(getContext(), targetHt.isDone() ? "Задание выполнено" : "Задание не выполнено", Toast.LENGTH_SHORT).show();
                                         // Обновляем данные и адаптер
                                         prepareDataLists();
                                         updateAdapterData();
@@ -442,10 +461,14 @@ public class HometaskRedactorFragment extends Fragment {
                         if (updated != null) {
                             List<Schedules.Hometask> updatedList = updated.getHometasks();
                             if (updatedList != null) {
-                                for (int j = 0; j < updatedList.size(); j++) {
+                                // Ищем задание по комбинации полей для точной идентификации
+                                for (int j = updatedList.size() - 1; j >= 0; j--) {
                                     Schedules.Hometask updatedHt = updatedList.get(j);
-                                    if (updatedHt != null && updatedHt.getLesson() != null && 
-                                        updatedHt.getLesson().equals(item.title) && !updatedHt.isPersonal()) {
+                                    if (updatedHt != null && !updatedHt.isPersonal() &&
+                                        updatedHt.getLesson() != null && updatedHt.getLesson().equals(item.title) &&
+                                        updatedHt.getTask() != null && updatedHt.getTask().equals(item.description) &&
+                                        ((updatedHt.getEndpoint() == null && item.endpointDate == null) ||
+                                         (updatedHt.getEndpoint() != null && item.endpointDate != null && updatedHt.getEndpoint().equals(item.endpointDate)))) {
                                         updatedList.remove(j);
                                         schedulelController.seteditableSchedule(updated);
                                         schedulelController.saveEditableScheduleToDB();

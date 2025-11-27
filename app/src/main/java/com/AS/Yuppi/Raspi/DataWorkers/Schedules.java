@@ -1,6 +1,7 @@
 package com.AS.Yuppi.Raspi.DataWorkers;import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -23,13 +24,16 @@ public class Schedules {
     private List<LocalDate> Hollidays= new ArrayList<>();
     private String Name="",
             Author="";
+    private Date UpdateDate = new Date(); // Дата и время последнего изменения/создания (DateTime)
 
     public Schedules(){
         setCircle_Mode(0);
+        updateDate(); // Устанавливаем дату создания
     }
 
     public Schedules(int Circle_Mode){
         setCircle_Mode(Circle_Mode);
+        updateDate(); // Устанавливаем дату создания
     }
 
     // ---------------- Hometask helpers ----------------
@@ -37,6 +41,7 @@ public class Schedules {
     public Hometask addHometask(String lesson, String task, LocalDate endpoint) {
         Hometask hometask = new Hometask(lesson, task, endpoint);
         Hometasks.add(hometask);
+        updateDate();
         return hometask;
     }
 
@@ -46,6 +51,7 @@ public class Schedules {
 
     public void setHometasks(List<Hometask> hometasks) {
         this.Hometasks = hometasks;
+        updateDate();
     }
 
     // ---------------- Notes helpers ----------------
@@ -53,6 +59,7 @@ public class Schedules {
     public Note addNote(String lesson, String data) {
         Note note = new Note(lesson, data);
         Notes.add(note);
+        updateDate();
         return note;
     }
 
@@ -62,6 +69,7 @@ public class Schedules {
 
     public void setNotes(List<Note> notes) {
         this.Notes = notes;
+        updateDate();
     }
     public Day_Schedule getScheduleForDayOffset(int offset) {
         LocalDate targetDate = LocalDate.now().plusDays(offset);
@@ -98,20 +106,52 @@ public class Schedules {
             // Корректный расчет номера недели и дня недели
             int dayOfWeek = targetDate.getDayOfWeek().getValue() - 1; // 0=Пн, 6=Вс
 
-            // Определяем четность недели относительно Start_Date
+            // Определяем номер недели относительно Start_Date
             // Math.floorDiv корректно работает с отрицательными числами
+            // Для дней до Start_Date weekNumber будет отрицательным
             long weekNumber = Math.floorDiv(daysBetween, 7);
-            int currentWeekParity = (int) Math.floorMod(weekNumber, 2);
-
-            // FirstWeekId - это четность *первой* недели (0=чет, 1=нечет)
-            // Если четность текущей недели совпадает с четностью первой, это 1-я неделя цикла
-            if (currentWeekParity == 0) { // 1-я, 3-я, 5-я... неделя цикла
-                int dayIndex = dayOfWeek + (FirstWeekId == 0 ? 0 : 7);
+            
+            // Определяем четность недели относительно Start_Date
+            // Используем Math.floorMod для корректной работы с отрицательными числами
+            // weekNumber = 0, 1, 2, 3... -> parity = 0, 1, 0, 1...
+            // weekNumber = -1, -2, -3... -> parity = 1, 0, 1, 0...
+            int weekParity = (int) Math.floorMod(weekNumber, 2);
+            
+            // Определяем, является ли текущая неделя первой или второй неделей цикла
+            // FirstWeekId определяет, какая неделя цикла соответствует Start_Date (weekNumber = 0)
+            // FirstWeekId = 0 означает, что Start_Date - это 1-я неделя цикла (индексы 0-6)
+            // FirstWeekId = 1 означает, что Start_Date - это 2-я неделя цикла (индексы 7-13)
+            //
+            // Логика: Неделя 0 (Start_Date) всегда имеет parity = 0
+            // Недели с той же четностью, что и неделя 0 (parity = 0), имеют ту же неделю цикла, что и Start_Date
+            // Недели с противоположной четностью (parity = 1) имеют противоположную неделю цикла
+            //
+            // Пример 1: FirstWeekId = 0 (Start_Date - это 1-я неделя цикла)
+            //   weekNumber = 0: parity = 0 → 1-я неделя (индексы 0-6)
+            //   weekNumber = 1: parity = 1 → 2-я неделя (индексы 7-13)
+            //   weekNumber = -1: parity = 1 → 2-я неделя (индексы 7-13)
+            //   weekNumber = -2: parity = 0 → 1-я неделя (индексы 0-6)
+            //
+            // Пример 2: FirstWeekId = 1 (Start_Date - это 2-я неделя цикла)
+            //   weekNumber = 0: parity = 0 → 2-я неделя (индексы 7-13)
+            //   weekNumber = 1: parity = 1 → 1-я неделя (индексы 0-6)
+            //   weekNumber = -1: parity = 1 → 1-я неделя (индексы 0-6)
+            //   weekNumber = -2: parity = 0 → 2-я неделя (индексы 7-13)
+            //
+            // Формула: 
+            // Если parity == 0, то неделя цикла = FirstWeekId (0 = 1-я, 1 = 2-я)
+            // Если parity == 1, то неделя цикла = 1 - FirstWeekId (0 = 2-я, 1 = 1-я)
+            boolean isFirstWeekOfCycle = (weekParity == 0) ? (FirstWeekId == 0) : (FirstWeekId == 0);
+            
+            if (isFirstWeekOfCycle) {
+                // 1-я неделя цикла: дни 0-6 (индексы 0-6 в Days_Schedule)
+                int dayIndex = dayOfWeek;
                 if (dayIndex >= 0 && dayIndex < Days_Schedule.size()){
                     return Days_Schedule.get(dayIndex);
                 }
-            } else { // 2-я, 4-я, 6-я... неделя цикла
-                int dayIndex = dayOfWeek + (FirstWeekId == 0 ? 7 : 0);
+            } else {
+                // 2-я неделя цикла: дни 7-13 (индексы 7-13 в Days_Schedule)
+                int dayIndex = dayOfWeek + 7;
                 if (dayIndex >= 0 && dayIndex < Days_Schedule.size()){
                     return Days_Schedule.get(dayIndex);
                 }
@@ -203,12 +243,14 @@ public class Schedules {
     }
     public void setStart_Date(LocalDate start_Date) {
         this.Start_Date = start_Date;
+        updateDate();
     }
     public LocalDate getEnd_Date() {
         return End_Date;
     }
     public void setEnd_Date(LocalDate end_Date) {
         this.End_Date = end_Date;
+        updateDate();
     }
     public List<LocalDate> getHollidays() {
         return Hollidays;
@@ -221,18 +263,39 @@ public class Schedules {
     }
     public void setName(String name) {
         this.Name = name;
+        updateDate();
     }
     public String getAuthor() {
         return Author;
     }
     public void setAuthor(String author) {
         this.Author = author;
+        updateDate();
+    }
+    
+    public Date getUpdateDate() {
+        return UpdateDate;
+    }
+    
+    public void setUpdateDate(Date updateDate) {
+        this.UpdateDate = updateDate;
+    }
+    
+    /**
+     * Обновляет UpdateDate до текущего времени (с миллисекундами).
+     * Вызывается автоматически при любом изменении расписания.
+     * Использует Date, который содержит дату и время, что позволяет отслеживать
+     * изменения даже в течение одного дня.
+     */
+    public void updateDate() {
+        this.UpdateDate = new Date(); // Date содержит и дату, и время с миллисекундами
     }
     public List<Day_Schedule> getDays_Schedule() {
         return Days_Schedule;
     }
     public void setDays_Schedule(List<Day_Schedule> days_Schedule) {
         Days_Schedule = days_Schedule;
+        updateDate();
     }
 
     /**

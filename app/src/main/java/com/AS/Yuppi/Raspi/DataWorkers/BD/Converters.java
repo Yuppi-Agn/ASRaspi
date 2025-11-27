@@ -8,10 +8,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class Converters {
@@ -173,5 +176,17 @@ public class Converters {
             tempMap.put(entry.getKey().toString(), entry.getValue());
         }
         return gson.toJson(tempMap);
+    }
+    
+    // --- Преобразование для Date ---
+    
+    @TypeConverter
+    public static Date fromDateTimestamp(Long value) {
+        return value == null ? null : new Date(value);
+    }
+    
+    @TypeConverter
+    public static Long dateToTimestamp(Date date) {
+        return date == null ? null : date.getTime();
     }
 }

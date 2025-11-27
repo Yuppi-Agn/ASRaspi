@@ -246,9 +246,13 @@ public class HomeFragment extends Fragment {
                                 // Сравниваем названия предметов (учитываем возможные различия в пробелах и регистре)
                                 String lessonSubject = lesson.subjectName.trim();
                                 String hometaskSubject = subject.trim();
-                                if (lessonSubject.equalsIgnoreCase(hometaskSubject) || 
-                                    lessonSubject.contains(hometaskSubject) || 
-                                    hometaskSubject.contains(lessonSubject)) {
+                                
+                                // Нормализуем названия: убираем лишние пробелы, приводим к нижнему регистру
+                                String normalizedLesson = lessonSubject.toLowerCase().replaceAll("\\s+", " ").trim();
+                                String normalizedHometask = hometaskSubject.toLowerCase().replaceAll("\\s+", " ").trim();
+                                
+                                // Сначала точное совпадение (после нормализации)
+                                if (normalizedLesson.equals(normalizedHometask)) {
                                     ScheduleLesson.HometaskInfo taskInfo = new ScheduleLesson.HometaskInfo(
                                         hometask.getTask(), hometask.isDone(), subject);
                                     if (lesson.hometasks == null) {
@@ -257,6 +261,23 @@ public class HomeFragment extends Fragment {
                                     lesson.hometasks.add(taskInfo);
                                     found = true;
                                     break;
+                                }
+                                
+                                // Если точного совпадения нет, проверяем, начинается ли название урока с названия задания
+                                // (для случаев, когда в расписании "Разработка мобильных приложений", а в задании "Разработка мобильных приложений")
+                                if (normalizedLesson.startsWith(normalizedHometask) || normalizedHometask.startsWith(normalizedLesson)) {
+                                    // Дополнительная проверка: если одно название значительно короче другого, пропускаем
+                                    int lengthDiff = Math.abs(normalizedLesson.length() - normalizedHometask.length());
+                                    if (lengthDiff <= 10) { // Разница не более 10 символов
+                                        ScheduleLesson.HometaskInfo taskInfo = new ScheduleLesson.HometaskInfo(
+                                            hometask.getTask(), hometask.isDone(), subject);
+                                        if (lesson.hometasks == null) {
+                                            lesson.hometasks = new ArrayList<>();
+                                        }
+                                        lesson.hometasks.add(taskInfo);
+                                        found = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -378,9 +399,13 @@ public class HomeFragment extends Fragment {
                                 // Сравниваем названия предметов (учитываем возможные различия в пробелах и регистре)
                                 String lessonSubject = lesson.subjectName.trim();
                                 String hometaskSubject = subject.trim();
-                                if (lessonSubject.equalsIgnoreCase(hometaskSubject) || 
-                                    lessonSubject.contains(hometaskSubject) || 
-                                    hometaskSubject.contains(lessonSubject)) {
+                                
+                                // Нормализуем названия: убираем лишние пробелы, приводим к нижнему регистру
+                                String normalizedLesson = lessonSubject.toLowerCase().replaceAll("\\s+", " ").trim();
+                                String normalizedHometask = hometaskSubject.toLowerCase().replaceAll("\\s+", " ").trim();
+                                
+                                // Сначала точное совпадение (после нормализации)
+                                if (normalizedLesson.equals(normalizedHometask)) {
                                     ScheduleLesson.HometaskInfo taskInfo = new ScheduleLesson.HometaskInfo(
                                         hometask.getTask(), hometask.isDone(), subject);
                                     if (lesson.hometasks == null) {
@@ -389,6 +414,23 @@ public class HomeFragment extends Fragment {
                                     lesson.hometasks.add(taskInfo);
                                     found = true;
                                     break;
+                                }
+                                
+                                // Если точного совпадения нет, проверяем, начинается ли название урока с названия задания
+                                // (для случаев, когда в расписании "Разработка мобильных приложений", а в задании "Разработка мобильных приложений")
+                                if (normalizedLesson.startsWith(normalizedHometask) || normalizedHometask.startsWith(normalizedLesson)) {
+                                    // Дополнительная проверка: если одно название значительно короче другого, пропускаем
+                                    int lengthDiff = Math.abs(normalizedLesson.length() - normalizedHometask.length());
+                                    if (lengthDiff <= 10) { // Разница не более 10 символов
+                                        ScheduleLesson.HometaskInfo taskInfo = new ScheduleLesson.HometaskInfo(
+                                            hometask.getTask(), hometask.isDone(), subject);
+                                        if (lesson.hometasks == null) {
+                                            lesson.hometasks = new ArrayList<>();
+                                        }
+                                        lesson.hometasks.add(taskInfo);
+                                        found = true;
+                                        break;
+                                    }
                                 }
                             }
                         }

@@ -124,7 +124,9 @@
                             android:layout_marginStart="8dp"
                             android:text="Сервер"
                             android:textSize="12sp"
-                            style="@style/Widget.Material3.Button"/>
+                            style="@style/Widget.Material3.Button"
+                            android:visibility="gone"
+                            />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

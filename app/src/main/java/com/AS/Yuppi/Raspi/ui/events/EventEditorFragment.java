@@ -84,6 +84,11 @@ public class EventEditorFragment extends Fragment {
         };
 
         binding.etEventDate.setOnClickListener(v -> {
+            // Обновляем календарь до текущей даты, если поле пустое или не установлено
+            String dateText = binding.etEventDate.getText().toString().trim();
+            if (dateText.isEmpty()) {
+                calendarDate.setTimeInMillis(System.currentTimeMillis());
+            }
             new DatePickerDialog(requireContext(), dateSetListener,
                     calendarDate.get(Calendar.YEAR),
                     calendarDate.get(Calendar.MONTH),
@@ -99,6 +104,11 @@ public class EventEditorFragment extends Fragment {
         };
 
         binding.etEventTime.setOnClickListener(v -> {
+            // Обновляем календарь до текущего времени, если поле пустое или не установлено
+            String timeText = binding.etEventTime.getText().toString().trim();
+            if (timeText.isEmpty()) {
+                calendarTime.setTimeInMillis(System.currentTimeMillis());
+            }
             new TimePickerDialog(requireContext(), timeSetListener,
                     calendarTime.get(Calendar.HOUR_OF_DAY),
                     calendarTime.get(Calendar.MINUTE),

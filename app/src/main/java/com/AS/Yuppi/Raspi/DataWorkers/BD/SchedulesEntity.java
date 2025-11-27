@@ -7,6 +7,7 @@ import com.AS.Yuppi.Raspi.DataWorkers.Day_Schedule;
 import com.AS.Yuppi.Raspi.DataWorkers.Schedules;
 
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -40,6 +41,9 @@ public class SchedulesEntity {
     // Новые поля: списки домашних заданий и заметок
     private List<Schedules.Hometask> Hometasks;
     private List<Schedules.Note> Notes;
+    
+    // Дата и время последнего изменения/создания (DateTime с миллисекундами)
+    private Date UpdateDate;
 
     // Конструктор для Room (должен соответствовать полям)
     public SchedulesEntity(List<Day_Schedule> Days_Schedule,
@@ -48,7 +52,8 @@ public class SchedulesEntity {
                            LocalDate Start_Date, LocalDate End_Date,
                            List<LocalDate> Hollidays, String Name, String Author,
                            List<Schedules.Hometask> Hometasks,
-                           List<Schedules.Note> Notes) {
+                           List<Schedules.Note> Notes,
+                           Date UpdateDate) {
         this.Days_Schedule = Days_Schedule;
         this.Special_Days_Shedule = Special_Days_Shedule;
         this.Circle_Mode = Circle_Mode;
@@ -60,6 +65,7 @@ public class SchedulesEntity {
         this.Author = Author;
         this.Hometasks = Hometasks;
         this.Notes = Notes;
+        this.UpdateDate = UpdateDate;
     }
 
     // Геттеры и Сеттеры (обязательны для Room!)
@@ -99,4 +105,7 @@ public class SchedulesEntity {
 
     public List<Schedules.Note> getNotes() { return Notes; }
     public void setNotes(List<Schedules.Note> notes) { Notes = notes; }
+    
+    public Date getUpdateDate() { return UpdateDate; }
+    public void setUpdateDate(Date updateDate) { UpdateDate = updateDate; }
 }

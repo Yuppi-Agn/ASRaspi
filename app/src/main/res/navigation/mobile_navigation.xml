@@ -56,13 +56,13 @@
     <fragment
         android:id="@+id/nav_event_editor"
         android:name="com.AS.Yuppi.Raspi.ui.events.EventEditorFragment"
-        android:label="Редактор события"
+        android:label="Редактор мероприятия"
         tools:layout="@layout/fragment_event_editor" />
 
-    <!-- ТОЛЬКО ДЛЯ ТЕСТОВ-->
+    <!-- Редактор расписаний (используется программно, не отображается в меню) -->
     <fragment
         android:id="@+id/nav_schedule_redactor2"
         android:name="com.AS.Yuppi.Raspi.ui.schedule_redactor2.ScheduleRedactor2Fragment"
-        android:label="Старый редактор"
+        android:label="Редактор расписания"
         tools:layout="@layout/fragment_schedule_redactor2" />
 </navigation>

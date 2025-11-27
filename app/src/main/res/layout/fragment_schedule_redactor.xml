@@ -179,6 +179,25 @@
                 app:cornerRadius="12dp"
                 android:text="Прочитать из файла"/>
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_sync_upload"
+                style="@style/Widget.App.PrimaryButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:cornerRadius="12dp"
+                android:text="Отправить на сервер"
+                android:backgroundTint="#4CAF50"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_sync_download"
+                style="@style/Widget.App.PrimaryButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:cornerRadius="12dp"
+                android:text="Загрузить с сервера"
+                android:backgroundTint="#2196F3"/>
 
         </LinearLayout>
         <LinearLayout

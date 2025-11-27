@@ -35,7 +35,6 @@ public class MainActivity extends AppCompatActivity {
         DrawerLayout drawer = binding.drawerLayout;
         mAppBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.nav_home,
-                R.id.nav_schedule_redactor2,
                 R.id.nav_schedule_redactor,
                 R.id.nav_hometaskRedactor)
                 .setOpenableLayout(drawer)
@@ -51,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
             // Сбрасываем подсветку со всех пунктов
             navView.findViewById(R.id.nav_home).setActivated(false);
             navView.findViewById(R.id.nav_schedule_redactor).setActivated(false);
-            navView.findViewById(R.id.nav_schedule_redactor2).setActivated(false);
             navView.findViewById(R.id.nav_hometaskRedactor).setActivated(false);
 
             // Включаем подсветку для текущего пункта
@@ -89,18 +87,7 @@ public class MainActivity extends AppCompatActivity {
             drawer.closeDrawer(GravityCompat.START);
         });
 
-        // --- Пункт 3: Старый редактор ---
-        View navSchedule2 = navView.findViewById(R.id.nav_schedule_redactor2);
-        TextView titleSchedule2 = navSchedule2.findViewById(R.id.item_title);
-        ImageView iconSchedule2 = navSchedule2.findViewById(R.id.item_icon);
-        titleSchedule2.setText("Старый редактор");
-        iconSchedule2.setImageResource(R.drawable.assignment_24);
-        navSchedule2.setOnClickListener(v -> {
-            navController.navigate(R.id.nav_schedule_redactor2); // <--- ИСПОЛЬЗУЕМ NAVCONTROLLER
-            drawer.closeDrawer(GravityCompat.START);
-        });
-
-        // --- Пункт 4: Задания и задачи ---
+        // --- Пункт 3: Задания и задачи ---
         View navHometask = navView.findViewById(R.id.nav_hometaskRedactor);
         TextView titleHometask = navHometask.findViewById(R.id.item_title);
         ImageView iconHometask = navHometask.findViewById(R.id.item_icon);

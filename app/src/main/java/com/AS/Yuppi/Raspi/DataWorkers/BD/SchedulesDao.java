@@ -45,4 +45,16 @@ public interface SchedulesDao {
      */
     @Query("SELECT * FROM schedules_table WHERE Name = :scheduleName LIMIT 1")
     SchedulesEntity getScheduleByNameSync(String scheduleName);
+
+    /**
+     * Получение расписания по имени и автору. (Синхронно)
+     */
+    @Query("SELECT * FROM schedules_table WHERE Name = :scheduleName AND Author = :author LIMIT 1")
+    SchedulesEntity getScheduleByNameAndAuthorSync(String scheduleName, String author);
+
+    /**
+     * Получение всех расписаний. (Синхронно)
+     */
+    @Query("SELECT * FROM schedules_table ORDER BY Name ASC")
+    List<SchedulesEntity> getAllSchedulesSync();
 }

@@ -470,6 +470,49 @@ public class ScheduleRedactorFragment extends Fragment {
             NavHostFragment.findNavController(ScheduleRedactorFragment.this)
                     .navigate(R.id.nav_event_editor, args);
         });
+        
+        // Кнопка "Отправить на сервер"
+        binding.btnSyncUpload.setOnClickListener(v -> {
+            // Отправка всех расписаний на сервер
+            schedulelController.uploadAllSchedulesToServer(new SchedulelController.SyncCallback() {
+                @Override
+                public void onSuccess(String message) {
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                    }
+                }
+                
+                @Override
+                public void onError(String error) {
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), error, Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
+        });
+        
+        // Кнопка "Загрузить с сервера"
+        binding.btnSyncDownload.setOnClickListener(v -> {
+            // Загрузка всех расписаний с сервера
+            schedulelController.downloadAllSchedulesFromServer(new SchedulelController.SyncCallback() {
+                @Override
+                public void onSuccess(String message) {
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                        // Обновляем список расписаний
+                        prepareDataLists();
+                        editorAdapter.updateData(new ArrayList<>(scheduleItems));
+                    }
+                }
+                
+                @Override
+                public void onError(String error) {
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), error, Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
+        });
     }
 
     private int dpToPx(int dp) {

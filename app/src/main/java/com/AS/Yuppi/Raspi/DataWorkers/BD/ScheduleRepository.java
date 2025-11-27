@@ -82,6 +82,17 @@ public class ScheduleRepository {
         });
     }
 
+    // Синхронное обновление для немедленного применения изменений
+    public void updateSync(final SchedulesEntity schedule) {
+        try {
+            databaseWriteExecutor.submit(() -> {
+                schedulesDao.update(schedule);
+            }).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * Получает список проекций "Имя-Автор" синхронно в фоновом потоке.
      * @return Список ScheduleNameAuthor.
@@ -110,6 +121,38 @@ public class ScheduleRepository {
         } catch (Exception e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    /**
+     * Получает полный объект SchedulesEntity по имени и автору синхронно в фоновом потоке.
+     * @param name Имя расписания.
+     * @param author Автор расписания.
+     * @return SchedulesEntity или null.
+     */
+    public SchedulesEntity getScheduleByNameAndAuthorSync(String name, String author) {
+        try {
+            return databaseReadExecutor.submit(() ->
+                    schedulesDao.getScheduleByNameAndAuthorSync(name, author)
+            ).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Получает все расписания синхронно в фоновом потоке.
+     * @return Список всех SchedulesEntity.
+     */
+    public List<SchedulesEntity> getAllSchedulesSync() {
+        try {
+            return databaseReadExecutor.submit(() ->
+                    schedulesDao.getAllSchedulesSync()
+            ).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
         }
     }
 

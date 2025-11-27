@@ -35,7 +35,7 @@ public class AddHometaskFragment extends Fragment {
 
     private AddHometaskViewModel addHometaskViewModel;
     private FragmentAddHometaskBinding binding;
-    private final Calendar myCalendar = Calendar.getInstance();
+    private Calendar myCalendar;
 
     private SchedulelController schedulelController;
     private UserController userController;
@@ -55,6 +55,10 @@ public class AddHometaskFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        // Инициализируем календарь текущей датой из системного времени
+        myCalendar = Calendar.getInstance();
+        myCalendar.setTimeInMillis(System.currentTimeMillis());
 
         MySingleton singleton = MySingleton.getInstance(requireContext().getApplicationContext());
         schedulelController = singleton.getSchedulelController();
@@ -80,6 +84,8 @@ public class AddHometaskFragment extends Fragment {
         
         // Если не редактируем, устанавливаем сегодняшнюю дату по умолчанию
         if (taskId < 0) {
+            // Обновляем календарь до текущей даты из системного времени
+            myCalendar.setTimeInMillis(System.currentTimeMillis());
             if ("personal".equals(mode)) {
                 if (binding.etDatePersonal.getText().toString().trim().isEmpty()) {
                     updateLabelPersonal();
@@ -156,6 +162,11 @@ public class AddHometaskFragment extends Fragment {
 
         // Устанавливаем обработчик клика на поле ввода даты (учебные задачи)
         binding.etDate.setOnClickListener(v -> {
+            // Обновляем календарь до текущей даты, если поле пустое или не установлено
+            String dateText = binding.etDate.getText().toString().trim();
+            if (dateText.isEmpty()) {
+                myCalendar.setTimeInMillis(System.currentTimeMillis());
+            }
             new DatePickerDialog(requireContext(), dateSetListener,
                     myCalendar.get(Calendar.YEAR),
                     myCalendar.get(Calendar.MONTH),
@@ -164,6 +175,11 @@ public class AddHometaskFragment extends Fragment {
 
         // Устанавливаем обработчик клика на поле ввода даты (личные задачи)
         binding.etDatePersonal.setOnClickListener(v -> {
+            // Обновляем календарь до текущей даты, если поле пустое или не установлено
+            String dateText = binding.etDatePersonal.getText().toString().trim();
+            if (dateText.isEmpty()) {
+                myCalendar.setTimeInMillis(System.currentTimeMillis());
+            }
             new DatePickerDialog(requireContext(), dateSetListenerPersonal,
                     myCalendar.get(Calendar.YEAR),
                     myCalendar.get(Calendar.MONTH),

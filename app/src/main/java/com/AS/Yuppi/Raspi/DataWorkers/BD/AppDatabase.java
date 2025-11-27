@@ -6,7 +6,7 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
-@Database(entities = {SchedulesEntity.class, LastActiveScheduleEntity.class, UserEventEntity.class, UserTaskEntity.class}, version = 6, exportSchema = false)
+@Database(entities = {SchedulesEntity.class, LastActiveScheduleEntity.class, UserEventEntity.class, UserTaskEntity.class}, version = 7, exportSchema = false)
 @TypeConverters({Converters.class}) // Регистрация преобразователей типов
 public abstract class AppDatabase extends RoomDatabase {
     public abstract LastActiveScheduleDao lastActiveScheduleDao();

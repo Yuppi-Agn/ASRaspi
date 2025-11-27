@@ -195,6 +195,11 @@ public class ScheduleRedactor2Fragment extends Fragment {
 
         // Устанавливаем обработчик клика на поле даты начала
         binding.editTextDateStartdate.setOnClickListener(v -> {
+            // Обновляем календарь до текущей даты, если поле пустое или не установлено
+            String dateText = binding.editTextDateStartdate.getText().toString().trim();
+            if (dateText.isEmpty()) {
+                calendarStartDate.setTimeInMillis(System.currentTimeMillis());
+            }
             new DatePickerDialog(requireContext(), dateStartListener,
                     calendarStartDate.get(Calendar.YEAR),
                     calendarStartDate.get(Calendar.MONTH),
@@ -203,6 +208,11 @@ public class ScheduleRedactor2Fragment extends Fragment {
 
         // Устанавливаем обработчик клика на поле даты окончания
         binding.editTextDateEnddate.setOnClickListener(v -> {
+            // Обновляем календарь до текущей даты, если поле пустое или не установлено
+            String dateText = binding.editTextDateEnddate.getText().toString().trim();
+            if (dateText.isEmpty()) {
+                calendarEndDate.setTimeInMillis(System.currentTimeMillis());
+            }
             new DatePickerDialog(requireContext(), dateEndListener,
                     calendarEndDate.get(Calendar.YEAR),
                     calendarEndDate.get(Calendar.MONTH),
@@ -605,7 +615,7 @@ public class ScheduleRedactor2Fragment extends Fragment {
      * Отправляет текущее редактируемое расписание на сервер.
      */
     private void postCurrentScheduleToServer() {
-        Schedules localSchedule = schedulelController.geteditableSchedule();
+        /*Schedules localSchedule = schedulelController.geteditableSchedule();
         if (localSchedule == null) {
             Toast.makeText(getContext(), "Нет расписания для отправки", Toast.LENGTH_SHORT).show();
             return;
@@ -648,7 +658,7 @@ public class ScheduleRedactor2Fragment extends Fragment {
                 Log.e("NetworkRequest", "Сетевая ошибка при отправке: " + t.getMessage());
                 Toast.makeText(getContext(), "Сетевая ошибка при отправке", Toast.LENGTH_SHORT).show();
             }
-        });
+        });*/
     }
 
 

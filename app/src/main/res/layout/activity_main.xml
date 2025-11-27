@@ -48,12 +48,7 @@
                 android:id="@+id/nav_schedule_redactor"
                 layout="@layout/custom_nav_item" />
 
-            <!-- Пункт 3: Старый редактор -->
-            <include
-                android:id="@+id/nav_schedule_redactor2"
-                layout="@layout/custom_nav_item" />
-
-            <!-- Пункт 4: Задания и задачи -->
+            <!-- Пункт 3: Задания и задачи -->
             <include
                 android:id="@+id/nav_hometaskRedactor"
                 layout="@layout/custom_nav_item" />

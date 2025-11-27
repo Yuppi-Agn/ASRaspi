@@ -21,7 +21,8 @@ public class ScheduleMapper {
                 pojo.getName(),
                 pojo.getAuthor(),
                 pojo.getHometasks(),
-                pojo.getNotes()
+                pojo.getNotes(),
+                pojo.getUpdateDate()
         );
         return entity;
     }
@@ -46,6 +47,7 @@ public class ScheduleMapper {
         pojo.setDays_Schedule(entity.getDays_Schedule());
         pojo.setHometasks(entity.getHometasks());
         pojo.setNotes(entity.getNotes());
+        pojo.setUpdateDate(entity.getUpdateDate());
 
         return pojo;
     }
